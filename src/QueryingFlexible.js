@@ -1,15 +1,18 @@
 (function (Solr, a$) {
-  Solr.QueryingURL = function (obj) {
+  Solr.QueryingFlexible = function (obj) {
     a$.extend(true, this, obj);
   };
   
-  Solr.QueryingURL.prototype = {
-    __expects: [ Solr.Configuring ],
-
+  
+  Solr.QueryingFlexible.prototype = {
+    __expects: [ Solr.Configuring, Solr.QueryingURL, Solr.QueryingJson ],
+    jsonParameters: [ 'q' ],
+    
     prepareQuery: function () {
       // TODO: Prepare the URL string for the query
       return {
-        url: ""
+        url: "",
+        data: ""
       };
     },
     

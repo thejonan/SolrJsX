@@ -20,6 +20,8 @@
       */
     doFilter: function (value) {
       // TODO: Add/set parameter based on the field, multivalue, exclusion, etc.
+      if (this.onFilter == null || this.onFilter(this.manager, value))
+        this.manager.doRequest();
     }
   };
   
