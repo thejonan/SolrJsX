@@ -23,7 +23,6 @@
     ajaxSettings: {        // Default settings for the ajax call to the `connector`
       async: true,
       dataType: "json",
-      error: this.onError,
       method: 'GET',
       processData: false,
     },
@@ -42,33 +41,29 @@
         self.pendingRequest = servlet || self.servlet;
         return;
       }
-      
       self.inRequest = true;
-      // TODO: Inform all listeners that a query is going to happen - if any of them refuses - cancel it.
-      for (var id in self.listeners) {
-        var l = self.listeners[id];
-        if (a$.act(l, l.beforeRequest) === false)
+      
+      // Now go to inform the listeners that a request is going to happen and
+      // give them a change to cancel it.
+      a$.each(self.listeners, function (l) {
+        if (a$.act(l, l.beforeRequest, self) === false)
           cancel = l;
-      }
+      })
 
       if (cancel !== null) {
         a$.act(cancel, self.onError, "Request cancelled");
         return; 
       }
       
-      // This is expected to come from "Querying" skill.
-      settings = a$.extend(settings, self.ajaxSettings, self.prepareQuery();
+      // Now let the Querying skill build the settings.url / data
+      settings = a$.extend(settings, self.ajaxSettings, self.prepareQuery());
       settings.url = self.solrUrl + (servlet || self.servlet) + (settings.url || "");
 
-      // TODO: Make the browser Back-functionality available.
-      
-      // Now prepare our success handler.
+      // Prepare the handlers for both error and success.
+      settings.error = self.onError;
       settings.success = function (data) {
         self.response = data;
-        for (var id in self.listeners) {
-          var l = self.listeners[id];
-          a$.act(l, l.afterRequest);
-        }
+        a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self); });
         
         // Call this for Querying skills.
         self.parseResponse(self.response);
@@ -84,14 +79,14 @@
           self.doRequest(self.pendingRequest);
       };
       
-      // Give someone the opportunity to make final tweaks.
+      // Give someone the opportunity to make some final tweaks.
       a$.act(self, self.onPrepare, settings);
       
-      // Inform all the skills for the preparation.
+      // Inform all our skills for the preparation.
       a$.broadcast(self, 'onPrepare', settings);
       
       // And make the damn call.
-      return self.connector.ajax( settings );
+      return self.connector.ajax( settings.url, settings );
     },
  
     /** Add one or many listeners to the manager

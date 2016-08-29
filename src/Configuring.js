@@ -2,12 +2,21 @@
   Solr.Configuring = function (obj) {
     a$.extend(true, this, obj);
     
+    // Now make some reformating of initial parameters.
+    var pars = this.parameters,
+        self = this;
     this.parameters = {};
+    a$.each(pars, function (p, name) {
+      // This is relying on existence of some Querying skill.
+      p = self.parseValue(p);
+      p.name = name;
+      self.addParameter(p);
+    });
   };
 
   /** This is directly copied from AjaxSolr.
     */  
-  Solr.Configuring.escapeValue = function (value) {
+  Solr.quoteValue = function (value) {
     // If the field value has a space, colon, quotation mark or forward slash
     // in it, wrap it in quotes, unless it is a range query or it is already
     // wrapped in quotes.
@@ -37,7 +46,7 @@
       
       if (paramIsMultiple(name)) {
         if (this.parameters[name] === undefined)
-          this.parameters[name = param;
+          this.parameters[name] = param;
         else {
           var found = false;
           a$.each(this.parameters[name], function (p) { found = found || a$.equal(true, param, p); });
@@ -53,6 +62,9 @@
       return param;
     },
     
+    /** Find all parameters matching the needle - it can be RegExp, string, etc.
+      * Always returns an array of indices - it could be empty, but is an array.
+      */
     findParameter: function (name, needle) {
       var indices = [];
       if (this.parameters[name] !== undefined) {
@@ -106,7 +118,7 @@
     
     /** Returns an array of values of all parameters with given name
       */
-    getParametersValues: function (name) {
+    getAllValues: function (name) {
       var val = null;
       if (this.parameters[name] !== undefined)
         val = !paramIsMultiple(name) ? this.parameters[name].value : this.parameters[name].map(function (p) { return p.value; });

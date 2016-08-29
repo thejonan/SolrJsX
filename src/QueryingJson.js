@@ -16,6 +16,10 @@
     
     parseQuery: function (response) {
 
+    },
+    
+    parseValue: function (value) {
+      
     }
   };
   
