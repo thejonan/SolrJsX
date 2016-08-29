@@ -7,6 +7,7 @@
 <!--<![endif]-->
 
 <head>
+<script src="../../jquery-1.10.2.js"></script>
 <script src="../../asSys/as-sys.js"></script>
 
 <script src="../src/Core.js"></script>
@@ -18,6 +19,7 @@
   var SolrManager = a$(Solr.Management, Solr.QueryingURL),
       Manager = new SolrManager({
         solrUrl : 'https://solr.ideaconsult.net/solr/enm_shard1_replica1/',
+        connector: jQuery,
         parameters: {
     			'facet' : true,
     			'facet.field' : ['unit'],
@@ -50,7 +52,9 @@
     			'json.nl' : "map",
     			'rows' : 20,
     			'expand' : true,
-    			'expand.rows' : 3
+    			'expand.rows' : 3,
+    			'wt': "json",
+    			'json.wrf': "?"
     		}
       });
 
