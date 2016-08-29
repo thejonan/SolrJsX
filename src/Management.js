@@ -24,7 +24,7 @@
       async: true,
       dataType: "json",
       method: 'GET',
-      processData: false,
+//       processData: false,
     },
     
   
@@ -65,8 +65,8 @@
         self.response = data;
         a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self); });
         
-        // Call this for Querying skills.
-        self.parseResponse(self.response);
+        // Call this for Querying skills, if it is defined.
+        a$.act(self, self.parseResponse, self.response);
         
         // Time to call the passed on success handler.
         a$.act(self, self.onSuccess);
@@ -86,7 +86,7 @@
       a$.broadcast(self, 'onPrepare', settings);
       
       // And make the damn call.
-      return self.connector.ajax( settings.url, settings );
+      return self.connector.ajax( settings );
     },
  
     /** Add one or many listeners to the manager

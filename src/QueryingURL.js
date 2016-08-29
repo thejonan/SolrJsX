@@ -27,10 +27,10 @@
         a$.each(plist, function (param) {
           var prefix = [];
               
-          a$.each(param.locals, function (l, k) { prefix.push(k + (l != null ? "=" + l : "")); })
+          a$.each(param.locals, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
           prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
           
-          if (param.value)
+          if (param.value || prefix)
             query.push(name + "=" + encodeURIComponent(prefix + paramValue(param.value)));
 
           // For dismax request handlers, if the q parameter has local params, the
@@ -42,6 +42,9 @@
           }
         });
       });
+      
+      // This helps the AJAX caller.
+      query.push("json.wrf=?");
       
       return { url: '?' + query.join("&") };
     },

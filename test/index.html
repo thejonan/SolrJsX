@@ -20,6 +20,7 @@
       Manager = new SolrManager({
         solrUrl : 'https://solr.ideaconsult.net/solr/enm_shard1_replica1/',
         connector: jQuery,
+        onPrepare: function (settings) { console.log("Request: " + JSON.stringify(settings)); },
         parameters: {
     			'facet' : true,
     			'facet.field' : ['unit'],
@@ -33,6 +34,7 @@
     			'f.substanceType.facet.mincount' : 2,
     			'f.guidance.facet.mincount' : 2,
     			'f.interpretation_result.facet.mincount' : 10,
+    			'facet.field': "substanceType",
     			// 'f.topcategory.facet.limit': 50,
     			// 'f.countryCodes.facet.limit': -1,
     			// 'facet.date': 'date',
@@ -53,8 +55,7 @@
     			'rows' : 20,
     			'expand' : true,
     			'expand.rows' : 3,
-    			'wt': "json",
-    			'json.wrf': "?"
+    			'wt': "json"
     		}
       });
 
