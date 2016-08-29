@@ -43,9 +43,6 @@
         });
       });
       
-      // This helps the AJAX caller.
-      query.push("json.wrf=?");
-      
       return { url: '?' + query.join("&") };
     },
     

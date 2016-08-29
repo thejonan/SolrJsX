@@ -33,7 +33,7 @@
       }
 
       if (parse[1] == 'q.alt') {
-        // if q.alt is present, assume it is because q was empty, as above
+        // if q.alt is present, assume it is because q was empty.
         param.name = 'q';
       }
       else {
@@ -84,7 +84,7 @@
       
       if (paramIsMultiple(name)) {
         if (this.parameterStore[name] === undefined)
-          this.parameterStore[name] = param;
+          this.parameterStore[name] = [ param ];
         else {
           var found = false;
           a$.each(this.parameterStore[name], function (p) { found = found || a$.equal(true, param, p); });
@@ -106,13 +106,16 @@
     findParameter: function (name, needle) {
       var indices = [];
       if (this.parameterStore[name] !== undefined) {
+        if (typeof needle !== 'object')
+          needle = { 'value': needle };
+          
         if (paramIsMultiple(name)) {
           a$.each(this.parameterStore[name], function (p, i) {
-            if (a$.match(p.value))
+            if (a$.similar(p, needle))
               indices.push(i);
           });
         }
-        else if (a$.match(this.parameterStore[name].value, needle))
+        else if (a$.similar(this.parameterStore[name], needle))
           indices.push(0);
       }
       return indices;
@@ -124,7 +127,7 @@
     removeParameters: function (name, indices) {
       if (this.parameterStore[name] !== undefined) {
         if (!Array.isArray(indices))
-          indices = this.findParameter(indices);
+          indices = this.findParameter(name, indices);
         
         if (paramIsMultiple(name)) {
           if (indices.length < this.parameterStore[name].length) {
@@ -146,12 +149,13 @@
     
     /** Returns a parameter or an array of parameters with that name
       */
-    getParameter: function (name) {
+    getParameter: function (name, index) {
       if (this.parameterStore[name] === undefined) {
         var param = { 'name': name };
         this.parameterStore[name] = paramIsMultiple(name) ? [ param ] : param;
       }
-      return this.parameterStore[name];
+      
+      return (index == null || !paramIsMultiple(name)) ? this.parameterStore[name] : this.parameterStore[name][index];
     },
     
     /** Returns an array of values of all parameters with given name

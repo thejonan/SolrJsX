@@ -24,9 +24,8 @@
       async: true,
       dataType: "json",
       method: 'GET',
-//       processData: false,
+      processData: false,
     },
-    
   
     /** The method for performing the actual request.
       */
@@ -97,12 +96,10 @@
         
       for (var l, i = 0, ll = listener.length; i < ll; ++i) {
         l = listener[i];
-        l.manager = this;
         this.listeners[l.id] = l;
         
-        // Inform the listener, that it has been added. 
-        // Good time for initialization, with manager set.
-        a$.act(l, l.onAdded, this);
+        // Inform the listener that it has been added.
+        a$.act(l, l.init, this);
       }
       
       return this;
