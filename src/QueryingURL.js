@@ -31,15 +31,10 @@
           prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
           
           if (param.value || prefix)
-            query.push(name + "=" + encodeURIComponent(prefix + paramValue(param.value)));
-
+            query.push(name + "=" + encodeURIComponent(prefix + paramValue(param.value || (name == 'q' && "*:*"))));
           // For dismax request handlers, if the q parameter has local params, the
-          // q parameter must be set to a non-empty value. In case the q parameter
-          // has local params but is empty, use the q.alt parameter, which accepts
-          // wildcards.
-          else if (name == 'q' && prefix) {
-            query.push('q.alt=' + encodeURIComponent(prefix + '*:*'));
-          }
+          // q parameter must be set to a non-empty value.
+          
         });
       });
       

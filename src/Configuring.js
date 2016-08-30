@@ -32,15 +32,9 @@
         }
       }
 
-      if (parse[1] == 'q.alt') {
-        // if q.alt is present, assume it is because q was empty.
-        param.name = 'q';
-      }
-      else {
-        param.name = parse[1];
-        var arr = parse[3].split(",");
-        param.value = arr.length > 1 ? arr : parse[3];
-      }
+      param.name = parse[1];
+      var arr = parse[3].split(",");
+      param.value = arr.length > 1 ? arr : parse[3];
     }
     
     return param;

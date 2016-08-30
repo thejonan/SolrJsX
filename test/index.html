@@ -17,11 +17,12 @@
 
 <script src="../src/Faceting.js"></script>
 <script src="../src/Texting.js"></script>
+<script src="../src/Paging.js"></script>
 
 <script lang="JavaScript">
   var SolrManager = a$(Solr.Management, Solr.QueryingURL),
       SolrFacet = a$(Solr.Faceting),
-      SolrText = a$(Solr.Texting),
+      SolrCombi = a$(Solr.Texting, Solr.Paging),
       
       Manager = new SolrManager({
         solrUrl : 'https://solr.ideaconsult.net/solr/enm_shard1_replica1/',
@@ -38,9 +39,10 @@
     // 			'fl' : "id,type_s,s_uuid,doc_uuid,loValue,upValue,topcategory,endpointcategory,effectendpoint,unit,guidance,substanceType,name,publicname,reference,reference_owner,e_hash,err,interpretation_result,textValue,reference_year,content,owner_name",
     			'stats': true,			
     			'json.nl' : "map",
-    			'rows' : 20,
     			'expand' : true,
-    			'expand.rows' : 3
+    			'expand.rows' : 3,
+    			'q.alt': "*:*",
+    			'q': "*:*"
     		}
       }),
       
@@ -54,16 +56,15 @@
         }
       }),
       
-      Texter = new SolrText({
-        delayed: 3000
+      TextPager = new SolrCombi({
+        delayed: 3000,
+        pageSize: 10
       });
 
 
-  Manager.addListeners(Faceter, Texter);
+  Manager.addListeners(Faceter, TextPager);
   Manager.doRequest();
   
-  Faceter.addValue('nano');
-
   var r1 = Manager.findParameters('fq', /substance/),
       r2 = Manager.findParameters('fq', function (v) { return v.value.match(/substance/); }),
       r3 = Manager.findParameters('fq', { name: 'fl', value: /substance/});

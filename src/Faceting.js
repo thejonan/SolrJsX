@@ -57,6 +57,7 @@
     multivalue: false,      // If this filter allows multiple values. Values can be arrays.
     aggregate: false,       // If additional values are aggregated in one filter.
     exclusion: false,       // Whether to exclude THIS field from filtering from itself.
+    locals: null,           // Some local attributes to be added to each parameter
     
     /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
       */
@@ -69,7 +70,7 @@
           self = this;
 
       if (this.exclusion) {
-        this.fieldLocals = { tag: this.field + "_tag" };
+        this.locals = a$.extend(this.locals, { tag: this.field + "_tag" });
         locals = { ex: this.field + "_tag" };
       }
 
@@ -120,7 +121,7 @@
 
       var index;
       if (!this.aggregate || !(index = this.manager.findParameters('fq', this.fieldRegExp)).length)
-        return this.manager.addParameter('fq', this.fq(value, exclude), this.fieldLocals);
+        return this.manager.addParameter('fq', this.fq(value, exclude), this.locals);
         
       // No we can obtain the parameter for aggregation.
       var param = this.manager.getParameter('fq', index[0]),
