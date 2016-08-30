@@ -25,6 +25,7 @@
         
       var self = this;
       this.delayTimer = setTimeout(function () {
+        self.manager.addParameter('start', 0);
         self.manager.doRequest();
         self.delayTimer = null;
       }, this.delayed);

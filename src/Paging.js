@@ -23,9 +23,9 @@
       if (this.totalPages == null)
         return false;
         
-      if (page === 'next')
+      if (page === 'next' || page === ">")
         page = this.currentPage + 1;
-      else if (page === 'prev' || page === "previous")
+      else if (page === 'prev' || page === "previous" || page === "<")
         page = this.currentPage - 1;
       else if (page === 'first' || page === 'start')
         page = 1;

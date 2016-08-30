@@ -280,6 +280,13 @@
       return counts;
     },
     
+    /** A Wrapped for consolidating the request making.
+      */
+    doRequest: function () {
+      self.manager.addParameter('start', 0);
+      self.manager.doRequest();
+    },
+    
     /**
      * @param {String} value The value.
      * @returns {Function} Sends a request to Solr if it successfully adds a
@@ -289,7 +296,7 @@
       var self = this;
       return function (e) {
         if (self.addValue(value))
-          self.manager.doRequest();
+          self.doRequest();
           
         return false;
       };
@@ -303,8 +310,8 @@
     unclickHandler: function (value) {
       var self = this;
       return function (e) {
-        if (self.removeValue(value))
-          self.manager.doRequest();
+        if (self.removeValue(value)) 
+          self.doRequest();
           
         return false;
       };
