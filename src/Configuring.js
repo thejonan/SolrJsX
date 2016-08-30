@@ -103,31 +103,27 @@
     /** Find all parameters matching the needle - it can be RegExp, string, etc.
       * Always returns an array of indices - it could be empty, but is an array.
       */
-    findParameter: function (name, needle) {
+    findParameters: function (name, needle) {
       var indices = [];
       if (this.parameterStore[name] !== undefined) {
-        if (typeof needle !== 'object')
+        if (typeof needle !== 'object' || needle instanceof RegExp || Array.isArray(needle))
           needle = { 'value': needle };
-          
-        if (paramIsMultiple(name)) {
-          a$.each(this.parameterStore[name], function (p, i) {
-            if (a$.similar(p, needle))
-              indices.push(i);
-          });
-        }
-        else if (a$.similar(this.parameterStore[name], needle))
-          indices.push(0);
+
+        a$.each(paramIsMultiple(name) ? this.parameterStore[name] : [ this.parameterStore[name] ], function (p, i) {
+          if (a$.similar(p, needle))
+            indices.push(i);
+        });
       }
       return indices;
     },
     
     /** Remove parameters. If needle is an array it is treated as an idices array,
-      * if not - it is first passed to findParameter() call.
+      * if not - it is first passed to findParameters() call.
       */
     removeParameters: function (name, indices) {
       if (this.parameterStore[name] !== undefined) {
         if (!Array.isArray(indices))
-          indices = this.findParameter(name, indices);
+          indices = this.findParameters(name, indices);
         
         if (paramIsMultiple(name)) {
           if (indices.length < this.parameterStore[name].length) {
