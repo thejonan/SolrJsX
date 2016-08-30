@@ -90,9 +90,14 @@
  
     /** Add one or many listeners to the manager
       */   
-    addListeners: function (listener) {
-      if (!Array.isArray(listener))
-        listener = [listener];
+    addListeners: function (one) {
+      var listener = one;
+      if (arguments.length > 1)
+        listener = arguments;
+      else if (!Array.isArray(one))
+        listener = [ one ];
+      else
+        listener = one;
         
       for (var l, i = 0, ll = listener.length; i < ll; ++i) {
         l = listener[i];

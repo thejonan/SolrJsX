@@ -107,11 +107,15 @@
       var indices = [],
           filter;
       if (this.parameterStore[name] !== undefined) {
-        if (typeof needle === 'function') 
+        if (typeof needle === 'function') {
           filter = function (p, i) { 
             if (needle(p, i)) 
               indices.push(i); 
           };
+        }
+        else if (needle == null) {
+          filter = function (p, i) { indices.push(i); };
+        }
         else {
           if (typeof needle !== 'object' || needle instanceof RegExp || Array.isArray(needle))
             needle = { 'value': needle };
@@ -135,7 +139,7 @@
         if (!Array.isArray(indices))
           indices = this.findParameters(name, indices);
         
-        if (indices.length > 0 && ( !paramIsMultiple(name) || indices.length == this.parameterStore[name].length)) 
+        if (!paramIsMultiple(name) || indices.length == this.parameterStore[name].length)
           delete this.parameterStore[name];
         else {
           indices.sort(function (a, b) { return a < b ? -1 : a > b ? 1 : 0; });

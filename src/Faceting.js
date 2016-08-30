@@ -57,8 +57,6 @@
     multivalue: false,      // If this filter allows multiple values. Values can be arrays.
     aggregate: false,       // If additional values are aggregated in one filter.
     exclusion: false,       // Whether to exclude THIS field from filtering from itself.
-    onFilter: null,         // Invoked everytime an actual filter change happens. 
-                            // If null or `true` is returned - the request is initiated.
     
     /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
       */

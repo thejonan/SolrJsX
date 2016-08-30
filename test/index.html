@@ -16,10 +16,12 @@
 <script src="../src/QueryingURL.js"></script>
 
 <script src="../src/Faceting.js"></script>
+<script src="../src/Texting.js"></script>
 
 <script lang="JavaScript">
   var SolrManager = a$(Solr.Management, Solr.QueryingURL),
       SolrFacet = a$(Solr.Faceting),
+      SolrText = a$(Solr.Texting),
       
       Manager = new SolrManager({
         solrUrl : 'https://solr.ideaconsult.net/solr/enm_shard1_replica1/',
@@ -50,11 +52,14 @@
           'mincount': 2,
           'limit': 1,
         }
+      }),
+      
+      Texter = new SolrText({
+        delayed: 3000
       });
 
 
-  Manager.addListeners(Faceter);
-  Manager.addParameter("q", "titanium");
+  Manager.addListeners(Faceter, Texter);
   Manager.doRequest();
   
   Faceter.addValue('nano');
