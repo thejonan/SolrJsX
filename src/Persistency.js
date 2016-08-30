@@ -18,7 +18,7 @@
     },
     
     /** Remove parameters. If needle is an array it is treated as an idices array,
-      * if not - it is first passed to findParameter() call.
+      * if not - it is first passed to findParameters() call.
       */
     removeParameters: function (indices) {
       // TODO Check if the parameter is persistent and store it.

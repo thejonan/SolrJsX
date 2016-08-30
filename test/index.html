@@ -44,6 +44,8 @@
       
       Faceter = new SolrFacet ({
         field: "substanceType",
+        multivalue: true,
+        aggregate: true,
         facet: {
           'mincount': 2,
           'limit': 1,
@@ -54,6 +56,12 @@
   Manager.addListeners(Faceter);
   Manager.addParameter("q", "titanium");
   Manager.doRequest();
+  
+  Faceter.addValue('nano');
+
+  var r1 = Manager.findParameters('fq', /substance/),
+      r2 = Manager.findParameters('fq', function (v) { return v.value.match(/substance/); }),
+      r3 = Manager.findParameters('fq', { name: 'fl', value: /substance/});
 </script>
 </head>
 <html>

@@ -9,15 +9,53 @@
     'missing': null,
     'method': null,
     'enum.cache.minDf': null
+  },
+  facetValue = function (value) {
+    if (!Array.isArray(value))
+      return Solr.quoteValue(value);
+    else if (value.length == 1)
+      return Solr.quoteValue(value[0]);
+    else
+      return "(" + value.map(function (v) { return Solr.quoteValue(v); }).join(" ") + ")";
+  },
+  leadBracket = /\s*\(\s*?/,
+  rearBracket = /\s*\)\s*$/,
+  emptyBrackets = /\s*\(\s*\)\s*$/;
+  
+  /**
+   * Parses a facet filter from a parameter.
+   *
+   * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
+   */    
+  
+  Solr.parseFacet = function (value) {
+    var m = value.match(/^(-)?(\S+):(.+)$/);
+    
+    if (!m)
+      return null;
+    var res = { field: m[2], exclude: !!m[1] },
+        sarr = m[3].replace(leadBracket, "").replace(rearBracket, "").replace(/\\"/g, "%0022").match(/[^\s"]+|"[^"]+"/g);
+
+    for (var i = 0, sl = sarr.length; i < sl; ++i)
+      sarr[i] = sarr[i].replace(/^"/, "").replace(/"$/, "").replace("%0022", '"');
+    
+    res.value = sl > 1 ? sarr : sarr[0];
+    return res;
   };
+  
   
   Solr.Faceting = function (obj) {
     a$.extend(true, this, obj);
     this.manager = null;
+    
+    // We cannot have aggregattion if we don't have multiple values.
+    if (!this.multivalue)
+      this.aggregate = false;
   };
   
   Solr.Faceting.prototype = {
     multivalue: false,      // If this filter allows multiple values. Values can be arrays.
+    aggregate: false,       // If additional values are aggregated in one filter.
     exclusion: false,       // Whether to exclude THIS field from filtering from itself.
     onFilter: null,         // Invoked everytime an actual filter change happens. 
                             // If null or `true` is returned - the request is initiated.
@@ -33,8 +71,8 @@
           self = this;
 
       if (this.exclusion) {
-        this.fieldLocals = { tag: this.field + "_ex" };
-        locals = { ex: this.field + "_ex" };
+        this.fieldLocals = { tag: this.field + "_tag" };
+        locals = { ex: this.field + "_tag" };
       }
 
       this.manager.addParameter('facet', true);
@@ -72,24 +110,44 @@
       });
     },
     
-    addValue: function (value, exclude) {
-      if (this.multivalue === false)
-        this.clearValues();
-        
-      var fq = this.fq(value, exclude);
-        
-      if (this.multivalue !== 'union')
-        return this.manager.addParameter('fq', fq, this.fieldLocals);
-        
-      var indices = this.manager.findParameters('fq', this.fieldRegExp);
-      if (!indices.length)
-        return this.manager.addParameter('fq', "(" + fq + ")", this.fieldLocals);
+    /**
+     * Add a facet filter parameter to the Manager
+     *
+     * @returns {Boolean} Whether the filter was added.
+     */    
 
-      var param = this.manager.getParameter('fq', indices[0]);
-      if (param.value.indexOf(fq) > -1)
+    addValue: function (value, exclude) {
+      if (!this.multivalue)
+        this.clearValues();
+
+      var index;
+      if (!this.aggregate || !(index = this.manager.findParameters('fq', this.fieldRegExp)).length)
+        return this.manager.addParameter('fq', this.fq(value, exclude), this.fieldLocals);
+        
+      // No we can obtain the parameter for aggregation.
+      var param = this.manager.getParameter('fq', index[0]),
+          parsed = Solr.parseFacet(param.value),
+          added = false;
+      
+      if (!Array.isArray(value))
+        value = [value];
+      for (var v, i = 0, vl = value.length; i < vl; ++i) {
+        v = value[i];
+        if (parsed.value == v)
+          continue;
+        else if (Array.isArray(parsed.value) && parsed.value.indexOf(v) >= 0)
+          continue;
+          
+        if (typeof parsed.value === 'string')
+          parsed.value = [ parsed.value ];
+        parsed.value.push(v);
+        added = true;
+      }
+      
+      if (!added)
         return false;
       
-      param.value = param.value.replace(/\)\s*$/, " " + fq + ")");
+      param.value = this.fq(parsed.value, exclude);
       return true;
     },
     
@@ -99,23 +157,38 @@
      * @returns {Boolean} Whether a filter query was removed.
      */    
     removeValue: function (value) {
-      if (this.multivalue === false)
+      if (!this.multivalue)
         return this.clearValues();
-      else if (this.multivalue !== 'union')
-        return this.manager.removeParameters('fq', this.fq(value)) || this.manager.removeParameters('fq', this.fq(value, exclude));
+      else {
+        var self = this;
 
-      var indices = this.manager.findParameters('fq', this.fieldRegExp);
-      if (!indices.length)
-        return false;
+        return this.manager.removeParameters('fq', function (p) {
+          var parse;
 
-      var param = this.manager.getParameter('fq', indices[0]);
-      if (param.value.indexOf(fq) < 0)
-        return false;
-        
-      param.value = param.value.replace(fq, "").replace(/\s+/g, " ");
-      return true;
+          if (!p.value.match(self.fieldRegExp))
+            return false;
+          else if (!self.aggregate)
+            return p.value.indexOf(facetValue(value)) >= 0;
+          
+          parse = Solr.parseFacet(p.value);
+          if (!Array.isArray(value))
+            value = [ value ];
+            
+          if (!Array.isArray(parse.value))
+            return value.indexOf(parse.value) >= 0;
+            
+          parse.value = parse.value.filter(function (v){ return value.indexOf(v) == -1; });
+          if (!parse.value.length)
+            return true;
+          else if (parse.value.length == 1)
+            parse.value = parse.value[0];
+            
+          p.value = self.fq(parse.value);
+          return false;
+        });
+      }
     },
-
+    
     /**
      * Removes all filter queries using the widget's facet field.
      *
@@ -243,7 +316,7 @@
      * @returns {String} An fq parameter value.
      */
     fq: function (value, exclude) {
-      return (exclude ? '-' : '') + this.field + ':' + Solr.quoteValue(value);
+      return (exclude ? '-' : '') + this.field + ':' + facetValue(value);
     }
   };
   

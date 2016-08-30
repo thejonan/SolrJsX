@@ -104,15 +104,25 @@
       * Always returns an array of indices - it could be empty, but is an array.
       */
     findParameters: function (name, needle) {
-      var indices = [];
+      var indices = [],
+          filter;
       if (this.parameterStore[name] !== undefined) {
-        if (typeof needle !== 'object' || needle instanceof RegExp || Array.isArray(needle))
-          needle = { 'value': needle };
-
-        a$.each(paramIsMultiple(name) ? this.parameterStore[name] : [ this.parameterStore[name] ], function (p, i) {
-          if (a$.similar(p, needle))
-            indices.push(i);
-        });
+        if (typeof needle === 'function') 
+          filter = function (p, i) { 
+            if (needle(p, i)) 
+              indices.push(i); 
+          };
+        else {
+          if (typeof needle !== 'object' || needle instanceof RegExp || Array.isArray(needle))
+            needle = { 'value': needle };
+            
+          filter = function (p, i) { 
+            if (a$.similar(p, needle)) 
+              indices.push(i); 
+          };
+        } 
+        
+        a$.each(paramIsMultiple(name) ? this.parameterStore[name] : [ this.parameterStore[name] ], filter);
       }
       return indices;
     },
@@ -125,16 +135,13 @@
         if (!Array.isArray(indices))
           indices = this.findParameters(name, indices);
         
-        if (paramIsMultiple(name)) {
-          if (indices.length < this.parameterStore[name].length) {
-            for (var i = 0, il = indices.length; i < il; ++i)
-              this.parameterStore.splice(indices[i], 1);
-          }
-          else
-            delete this.parameterStore[name];  
-        }
-        else if (indices.length > 0) {
+        if (indices.length > 0 && ( !paramIsMultiple(name) || indices.length == this.parameterStore[name].length)) 
           delete this.parameterStore[name];
+        else {
+          indices.sort(function (a, b) { return a < b ? -1 : a > b ? 1 : 0; });
+          // We need to traverse in reverse, relying that the indices are ascending.
+          for (var i = indices.length - 1; i >= 0; --i)
+            this.parameterStore[name].splice(indices[i], 1);
         }
           
         return indices.length;
