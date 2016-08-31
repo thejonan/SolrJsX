@@ -12,11 +12,11 @@
   },
   facetValue = function (value) {
     if (!Array.isArray(value))
-      return Solr.quoteValue(value);
+      return Solr.escapeValue(value);
     else if (value.length == 1)
-      return Solr.quoteValue(value[0]);
+      return Solr.escapeValue(value[0]);
     else
-      return "(" + value.map(function (v) { return Solr.quoteValue(v); }).join(" ") + ")";
+      return "(" + value.map(function (v) { return Solr.escapeValue(v); }).join(" ") + ")";
   },
   leadBracket = /\s*\(\s*?/,
   rearBracket = /\s*\)\s*$/,
@@ -51,6 +51,8 @@
     // We cannot have aggregattion if we don't have multiple values.
     if (!this.multivalue)
       this.aggregate = false;
+
+    this.fieldRegExp = new RegExp('^-?' + this.field + ':');
   };
   
   Solr.Faceting.prototype = {
@@ -58,20 +60,20 @@
     aggregate: false,       // If additional values are aggregated in one filter.
     exclusion: false,       // Whether to exclude THIS field from filtering from itself.
     locals: null,           // Some local attributes to be added to each parameter
+    facet: { },             // A default, empty definition.
     
     /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
       */
     init: function (manager) {
       this.manager = manager;
-      this.fieldRegExp = new RegExp('^-?' + this.field + ':');
       
       var fpars = a$.extend({}, FacetParameters),
           locals = null,
           self = this;
 
       if (this.exclusion) {
-        this.locals = a$.extend(this.locals, { tag: this.field + "_tag" });
-        locals = { ex: this.field + "_tag" };
+        this.locals = a$.extend(this.locals, { tag: this.id + "_tag" });
+        locals = { ex: this.id + "_tag" };
       }
 
       this.manager.addParameter('facet', true);
@@ -100,8 +102,10 @@
       }
       // Set facet.field, facet.date or facet.range to truthy values to add
       // related per-field parameters to the parameter store.
-      else
+      else {
+        this.facet.field = true;
         this.manager.addParameter('facet.field', this.field, locals);
+      }
       
       fpars = a$.common(this.facet, fpars);
       a$.each(fpars, function (p, k) { 
@@ -206,11 +210,11 @@
      */
     getFacetCounts: function () {
       var property;
-      if (this['facet.field'] !== undefined)
+      if (this.facet.field !== undefined)
         property = 'facet_fields';
-      else if (this['facet.date'] !== undefined)
+      else if (this.facet.date !== undefined)
         property = 'facet_dates';
-      else if (this['facet.range'] !== undefined)
+      else if (this.facet.range !== undefined)
         property = 'facet_ranges';
 
       if (property !== undefined) {
@@ -283,8 +287,8 @@
     /** A Wrapped for consolidating the request making.
       */
     doRequest: function () {
-      self.manager.addParameter('start', 0);
-      self.manager.doRequest();
+      this.manager.addParameter('start', 0);
+      this.manager.doRequest();
     },
     
     /**

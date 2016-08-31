@@ -4,7 +4,7 @@
 (function (Solr, a$) {
   /** This is directly copied from AjaxSolr.
     */  
-  Solr.quoteValue = function (value) {
+  Solr.escapeValue = function (value) {
     // If the field value has a space, colon, quotation mark or forward slash
     // in it, wrap it in quotes, unless it is a range query or it is already
     // wrapped in quotes.

@@ -18,7 +18,7 @@
     this.manager = null;
   }
   
-  Solr.Widgets.Page.prototype = {
+  Solr.Widgets.Pager.prototype = {
     __expects: [ Solr.Paging ],
     
     innerWindow: 4,                 // How many links are shown around the current page. Defaults to 4.
@@ -192,6 +192,6 @@
       this.renderLinks(this.windowedLinks());
       this.renderHeader(this.pageSize, (this.currentPage - 1) * this.pageSize, this.totalEntries);
     }
-  });
+  };
   
 })(Solr, a$, jQuery);

@@ -10,7 +10,7 @@
       return value.toString(); 
     else {
       var str = [];
-      a$.each(value, function (v, k) { str.push(k + ":" + Solr.quoteValue(v)); });
+      a$.each(value, function (v, k) { str.push(k + ":" + Solr.escapeValue(v)); });
       return str.join(" ");
     }
   }
