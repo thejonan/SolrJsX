@@ -29,7 +29,7 @@
    */    
   
   Solr.parseFacet = function (value) {
-    var m = value.match(/^(-)?(\S+):(.+)$/);
+    var m = value.match(/^(-)?([^\s:]+):(.+)$/);
     
     if (!m)
       return null;
