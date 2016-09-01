@@ -1,24 +1,21 @@
-(function (Solr, a$) {
-  Solr.QueryingFlexible = function (obj) {
-    a$.extend(true, this, obj);
-  };
-  
-  
-  Solr.QueryingFlexible.prototype = {
-    __expects: [ Solr.Configuring, Solr.QueryingURL, Solr.QueryingJson ],
-    jsonParameters: [ 'q' ],
-    
-    prepareQuery: function () {
-      // TODO: Prepare the URL string for the query
-      return {
-        url: "",
-        data: ""
-      };
-    },
-    
-    parseQuery: function (response) {
+Solr.QueryingFlexible = function (obj) {
+  a$.extend(true, this, obj);
+};
 
-    }
-  };
+
+Solr.QueryingFlexible.prototype = {
+  __expects: [ Solr.Configuring, Solr.QueryingURL, Solr.QueryingJson ],
+  jsonParameters: [ 'q' ],
   
-})(Solr, a$);
+  prepareQuery: function () {
+    // TODO: Prepare the URL string for the query
+    return {
+      url: "",
+      data: ""
+    };
+  },
+  
+  parseQuery: function (response) {
+
+  }
+};

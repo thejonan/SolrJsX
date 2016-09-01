@@ -1,0 +1,25 @@
+{
+  "name": "SolrJs2",
+  "version": "0.9.0",
+  "description": "A lightweight, JavaScript engine for building Solr requests",
+  "keywords": [
+    "solr",
+    "requests",
+    "extensible",
+    "flexible"
+  ],
+  "homepage": "http://jonan.info/SolrJs2/",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ivan (Jonan) Georgiev",
+      "homepage": "http://jonan.info/"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/thejonan/SolrJs2/issues",
+    "wiki": "https://github.com/thejonan/SolrJs2/wiki",
+    "API": "https://github.com/thejonan/SolrJs2/Reference",
+    "source": "https://github.com/thejonan/SolrJs2"
+  }
+}

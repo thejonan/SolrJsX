@@ -1,0 +1,66 @@
+{
+  "name": "solr-js2",
+  "version": "0.9.0",
+  "description": "A lightweight, JavaScript engine for building Solr requests",
+  "keywords": [
+    "solr",
+    "requests",
+    "extensible",
+    "flexible"
+  ],
+  "homepage": "http://jonan.info/SolrJs2/",
+  "license": "MIT",
+  "author": [
+    {
+      "name": "Ivan (Jonan) Georgiev",
+      "homepage": "http://jonan.info/"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thejonan/SolrJs2"
+  },
+  "main": "solr-js2.js",
+  "browser": "solr-js2-full.js",
+  "jspm": {
+    "main": "solr-js2.js",
+    "shim": {
+      "solr-js2": {
+        "exports": "Solr"
+      }
+    },
+    "files": [
+      "src/Core.js",
+      "src/Management.js",
+      "src/Configuring.js",
+      "src/QueryingURL.js",
+      "src/QueryingJson.js",
+      "src/QueryingFlexible.js",
+      "src/Persistency.js",
+      "src/Texting.js",
+      "src/Paging.js",
+      "src/Faceting.js"
+    ],
+    "buildConfig": {
+      "uglify": true
+    }
+  },
+  "spm": {
+    "main": "solr-js2.js"
+  },
+  "devDependencies": {
+    "uglify-js": "latest",
+    "vows": "latest",
+    "smash": "latest"
+  },
+  "scripts": {
+    "preinstall": "npm install https://github.com/thejonan/asSys.js.git",
+    "preupdate": "npm update https://github.com/thejonan/asSys.js.git",
+    
+    "pretest": "rm -f solr-js2.* && export VERSION=`node -e 'console.log(require(\"./package.json\").version)'` && sed -E -e s/{{VERSION}}/$VERSION/ src/Core.js | smash src/Core.js | uglifyjs -b indent-level=2 -o solr-js2.js",
+    "test": "vows && echo && uglifyjs -nc -mt < solr-js2.js > solr-js2.min.js",
+    "widgets": "smash widgets/*.js | uglifyjs -b indent-level=2 -o solr-js2.widgets.js && uglifyjs -nc -mt < solr-js2.widgets.js > solr-js2.widgets.min.js",
+    "prepublish": "npm test && npm run-script widgets && chmod a-w solr-js2.*.js && zip solr-js2.zip LICENSE solr-js2.*.js",
+    "postpublish": "VERSION=`node -e 'console.log(require(\"./package.json\").version)'`; git push && git tag -am \"Release $VERSION.\" ${VERSION} && git push --tags"
+  }
+}

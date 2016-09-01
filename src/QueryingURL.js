@@ -1,53 +1,50 @@
-(function (Solr, a$) {
-  Solr.QueryingURL = function (obj) {
-    a$.extend(true, this, obj);
-  };
+Solr.QueryingURL = function (obj) {
+  a$.extend(true, this, obj);
+};
 
-  var paramValue = function (value) {
-    if (Array.isArray(value))
-      return value.join(",");
-    else if (typeof value !== 'object')
-      return value.toString(); 
-    else {
-      var str = [];
-      a$.each(value, function (v, k) { str.push(k + ":" + Solr.escapeValue(v)); });
-      return str.join(" ");
-    }
+var paramValue = function (value) {
+  if (Array.isArray(value))
+    return value.join(",");
+  else if (typeof value !== 'object')
+    return value.toString(); 
+  else {
+    var str = [];
+    a$.each(value, function (v, k) { str.push(k + ":" + Solr.escapeValue(v)); });
+    return str.join(" ");
   }
-  
-  Solr.QueryingURL.prototype = {
-    __expects: [ Solr.Configuring ],
-    
-    prepareQuery: function () {
-      var self = this,
-          query = [];
-          
-      a$.each(self.parameterStore, function (plist, name) {
-        if (!Array.isArray(plist)) plist = [plist];
-        a$.each(plist, function (param) {
-          var prefix = [];
-              
-          a$.each(param.locals, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
-          prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
-          
-          if (param.value || prefix)
-            query.push(name + "=" + encodeURIComponent(prefix + paramValue(param.value || (name == 'q' && "*:*"))));
-          // For dismax request handlers, if the q parameter has local params, the
-          // q parameter must be set to a non-empty value.
-          
-        });
-      });
-      
-      return { url: '?' + query.join("&") };
-    },
-    
-    parseQuery: function (response) {
+}
 
-    },
-    
-    parseValue: function (value) {
-      
-    }
-  };
+Solr.QueryingURL.prototype = {
+  __expects: [ Solr.Configuring ],
   
-})(Solr, a$);
+  prepareQuery: function () {
+    var self = this,
+        query = [];
+        
+    a$.each(self.parameterStore, function (plist, name) {
+      if (!Array.isArray(plist)) plist = [plist];
+      a$.each(plist, function (param) {
+        var prefix = [];
+            
+        a$.each(param.locals, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
+        prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
+        
+        if (param.value || prefix)
+          query.push(name + "=" + encodeURIComponent(prefix + paramValue(param.value || (name == 'q' && "*:*"))));
+        // For dismax request handlers, if the q parameter has local params, the
+        // q parameter must be set to a non-empty value.
+        
+      });
+    });
+    
+    return { url: '?' + query.join("&") };
+  },
+  
+  parseQuery: function (response) {
+
+  },
+  
+  parseValue: function (value) {
+    
+  }
+};
