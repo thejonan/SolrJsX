@@ -60,7 +60,7 @@ Solr.Management.prototype = {
     // Prepare the handlers for both error and success.
     settings.error = self.onError;
     settings.success = function (data) {
-      self.response = data;
+      self.parseQuery(self.response = data);
       a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self); });
       
       // Call this for Querying skills, if it is defined.

@@ -67,7 +67,7 @@ Solr.Management.prototype = {
     // Prepare the handlers for both error and success.
     settings.error = self.onError;
     settings.success = function (data) {
-      self.response = data;
+      self.parseQuery(self.response = data);
       a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self); });
       
       // Call this for Querying skills, if it is defined.
@@ -380,10 +380,19 @@ Solr.QueryingURL.prototype = {
 
   },
   
-  parseValue: function (value) {
-    
+};
+var renameParameter = function (name) {
+  switch (name) {
+    case 'fq': return 'filter';
+    case 'q': return 'query';
+    case 'fl': return 'fields';
+    case 'rows': return 'limit';
+    case 'start': return 'offset';
+    case 'f': return 'facet';
+    default: return name.replace(/^json\./, "");
   }
 };
+
 Solr.QueryingJson = function (obj) {
   a$.extend(true, this, obj);
 };
@@ -391,21 +400,35 @@ Solr.QueryingJson = function (obj) {
 Solr.QueryingJson.prototype = {
   __expects: [ Solr.Configuring ],
   prepareQuery: function () {
-    // TODO: Prepare the Json object for the request body
-    return {
-      data: {
+    var self = this,
+        query = {};
+    a$.each(self.parameterStore, function (param, name) {
+      name = renameParameter(name).split(".");
+      
+      for (var i = 0, nl = name.length, q = query, n; i < nl - 1; ++i) {
+        n = name[i];
         
+        if (i == 0 && n == 'f')
+          n = 'facet';
+        else if (i >= 2 && name == 'facet')
+          continue;
+          
+        if (q[n] === undefined)
+          q[n] = {};
+        q = q[n];
       }
-    };
+      
+      q[name[i]] = param.value;
+    });
+    
+    console.log("Query data: " + JSON.stringify(query));
+    return { data: query };
   },
   
   parseQuery: function (response) {
 
   },
   
-  parseValue: function (value) {
-    
-  }
 };
 Solr.QueryingFlexible = function (obj) {
   a$.extend(true, this, obj);

@@ -44,7 +44,4 @@ Solr.QueryingURL.prototype = {
 
   },
   
-  parseValue: function (value) {
-    
-  }
 };
