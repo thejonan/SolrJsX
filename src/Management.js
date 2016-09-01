@@ -18,7 +18,7 @@
     servlet: "select",    // Default servlet to be used is "select".
     
     onError: function (message) { window.console && console.log && console.log(message); },
-    onPrepare: function (ajaxSettings) { return ajaxSettings; },
+    onPrepare: function (ajaxSettings) { },
     onSuccess: null,
     ajaxSettings: {        // Default settings for the ajax call to the `connector`
       async: true,
@@ -78,16 +78,27 @@
           self.doRequest(self.pendingRequest);
       };
       
-      // Give someone the opportunity to make some final tweaks.
-      a$.act(self, self.onPrepare, settings);
-      
+
       // Inform all our skills for the preparation.
       a$.broadcast(self, 'onPrepare', settings);
+
+      // Give someone the opportunity to make some final tweaks.
+      a$.act(self, self.onPrepare, settings);
       
       // And make the damn call.
       return self.connector.ajax( settings );
     },
  
+    /** Initialize the management and most importantly - the listener's
+      */
+    init: function () {
+      var self = this;
+      a$.each(this.listeners, function (l) {
+        // Inform the listener that it has been added.
+        a$.act(l, l.init, self);
+      })  
+    },
+    
     /** Add one or many listeners to the manager
       */   
     addListeners: function (one) {
@@ -102,9 +113,6 @@
       for (var l, i = 0, ll = listener.length; i < ll; ++i) {
         l = listener[i];
         this.listeners[l.id] = l;
-        
-        // Inform the listener that it has been added.
-        a$.act(l, l.init, this);
       }
       
       return this;
@@ -129,8 +137,24 @@
       }));
       
       return self;
+    },
+    
+    /** Enumerate all listeners.
+      */
+    enumerateListeners: function(callback, context) {
+      if (typeof callback !== 'function')
+        return;
+        
+      a$.each(this.listeners, function (l, id) {
+        callback.call(l, l, id, context);
+      });
+    },
+    
+    /** A listener retrieval method
+      */
+    getListener: function (id) {
+      return this.listeners[id];
     }
-   
   };
   
 })(Solr, asSys);

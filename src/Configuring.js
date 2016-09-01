@@ -130,7 +130,9 @@
       */
     removeParameters: function (name, indices) {
       if (this.parameterStore[name] !== undefined) {
-        if (!Array.isArray(indices))
+        if (typeof indices === 'number')
+          indices = [ indices ];
+        else if (!Array.isArray(indices))
           indices = this.findParameters(name, indices);
         
         if (!paramIsMultiple(name) || indices.length == this.parameterStore[name].length)
