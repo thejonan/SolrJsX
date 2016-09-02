@@ -28,7 +28,7 @@
     separator: ' ',                 // Separator between pagination links. Defaults to " ".
 
     init: function (manager) {
-      a$.act(this, Solr.Paging.prototype.init, manager);
+      a$.pass(this, Solr.Widgets.Pager, 'init', manager);
     },
        
     /**
@@ -185,7 +185,7 @@
     },
   
     afterRequest: function () {
-      a$.act(this, Solr.Paging.prototype.afterRequest);
+      a$.pass(this, Solr.Widgets.Pager, 'afterRequest');
   
       $(this.target).empty();
   

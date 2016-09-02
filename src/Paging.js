@@ -65,7 +65,7 @@ Solr.Paging.prototype = {
 
   /** We need to set all our internals.
     * NOTE: Don't forget to manually call this activity on the skill
-    * using {@code}a$.act(this, Solr.Paging.prototype.afterRequest);
+    * using {@code}a$.pass(this, <inheriting skill>, 'afterRequest');{@code}
     */
     
   afterRequest: function () {
