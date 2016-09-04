@@ -338,7 +338,10 @@ Solr.Configuring.prototype = {
     */
   enumerateParameters: function (callback) {
     a$.each(this.parameterStore, function (p) {
-      a$.each(p, callback);
+      if (Array.isArray(p))
+        a$.each(p, callback);
+      else
+        callback(p);
     });
   }
 };
@@ -365,20 +368,16 @@ Solr.QueryingURL.prototype = {
     var self = this,
         query = [];
         
-    a$.each(self.parameterStore, function (plist, name) {
-      if (!Array.isArray(plist)) plist = [plist];
-      a$.each(plist, function (param) {
-        var prefix = [];
-            
-        a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
-        prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
-        
-        if (param.value || prefix)
-          query.push(name + "=" + encodeURIComponent(prefix + paramValue(param.value || (name == 'q' && "*:*"))));
-        // For dismax request handlers, if the q parameter has local params, the
-        // q parameter must be set to a non-empty value.
-        
-      });
+    self.enumerateParameters(function (param) {
+      var prefix = [];
+          
+      a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
+      prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
+      
+      if (param.value || prefix)
+        query.push(param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || (param.name == 'q' && "*:*"))));
+      // For dismax request handlers, if the q parameter has local params, the
+      // q parameter must be set to a non-empty value.
     });
     
     return { url: '?' + query.join("&") };
@@ -412,6 +411,7 @@ Solr.QueryingJson.prototype = {
     var self = this,
         query = {};
     
+    // TODO. Manu things to be done!
     self.enumerateParameters(function (param) {
       var m;
       
@@ -428,7 +428,7 @@ Solr.QueryingJson.prototype = {
         a$.path(query, 'facet.' + m[1] + '.' + m[2], param.value);
       }
       else {
-        a$.path(query, param.name, param.value);
+        a$.path(query, renameParameter(param.name), param.value);
       }
     });
     

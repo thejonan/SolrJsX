@@ -174,7 +174,10 @@ Solr.Configuring.prototype = {
     */
   enumerateParameters: function (callback) {
     a$.each(this.parameterStore, function (p) {
-      a$.each(p, callback);
+      if (Array.isArray(p))
+        a$.each(p, callback);
+      else
+        callback(p);
     });
   }
 };

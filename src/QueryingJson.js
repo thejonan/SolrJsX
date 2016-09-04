@@ -38,7 +38,7 @@ Solr.QueryingJson.prototype = {
         a$.path(query, 'facet.' + m[1] + '.' + m[2], param.value);
       }
       else {
-        a$.path(query, param.name, param.value);
+        a$.path(query, renameParameter(param.name), param.value);
       }
     });
     

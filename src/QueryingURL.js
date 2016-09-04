@@ -28,7 +28,7 @@ Solr.QueryingURL.prototype = {
       prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
       
       if (param.value || prefix)
-        query.push(name + "=" + encodeURIComponent(prefix + paramValue(param.value || (name == 'q' && "*:*"))));
+        query.push(param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || (param.name == 'q' && "*:*"))));
       // For dismax request handlers, if the q parameter has local params, the
       // q parameter must be set to a non-empty value.
     });
