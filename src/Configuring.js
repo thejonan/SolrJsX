@@ -21,12 +21,12 @@ Solr.parseParameter = function (str) {
     if (parse[2] != null) {
       var matches;
       while (matches = /([^\s=]+)=?(\S*)?/g.exec(parse[2])) {
-        if (param.locals === undefined)
-          param.locals = {};
+        if (param.domain === undefined)
+          param.domain = {};
         if (matches[2] == null)
-          param.locals['type'] = matches[1];
+          param.domain['type'] = matches[1];
         else
-          param.locals[matches[1]] = matches[2];
+          param.domain[matches[1]] = matches[2];
         parse[2] = parse[2].replace(matches[0], ''); // Safari's exec seems not to do this on its own
       }
     }
@@ -63,14 +63,14 @@ var paramIsMultiple = function (name) {
 
 Solr.Configuring.prototype = {
   /** Add a parameter. If `name` is an object - it is treated as a prepared
-    * parameter and `value` and `locals` are ignored.
+    * parameter and `value` and `domain` are ignored.
     */
-  addParameter: function (param, value, locals) {
+  addParameter: function (param, value, domain) {
     var name;
     
     if (typeof param !== 'object') {
       name = param;
-      param = { 'name': param, 'value': value, 'locals': locals };
+      param = { 'name': param, 'value': value, 'domain': domain };
     }
     else
       name = param.name;
@@ -168,5 +168,13 @@ Solr.Configuring.prototype = {
       val = !paramIsMultiple(name) ? this.parameterStore[name].value : this.parameterStore[name].map(function (p) { return p.value; });
 
     return val;
+  },
+  
+  /** Iterate over all parameters - including array-based, etc.
+    */
+  enumerateParameters: function (callback) {
+    a$.each(this.parameterStore, function (p) {
+      a$.each(p, callback);
+    });
   }
 };

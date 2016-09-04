@@ -8,11 +8,11 @@ Solr.Persistency.prototype = {
   
   persistentParams: [],   // Parameters that need to stay persistent between calls.
 
-  addParameter: function (param, value, locals) {
+  addParameter: function (param, value, domain) {
     // TODO Check if the parameter is persistent and store it.
     
     // And make the call to the "super".
-    a$.act(this, Solf.Configuring.prototype.addParameter, param, value, locals);
+    a$.act(this, Solf.Configuring.prototype.addParameter, param, value, domain);
     return param;
   },
   

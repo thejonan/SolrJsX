@@ -57,7 +57,7 @@ Solr.Faceting.prototype = {
   multivalue: false,      // If this filter allows multiple values. Values can be arrays.
   aggregate: false,       // If additional values are aggregated in one filter.
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
-  locals: null,           // Some local attributes to be added to each parameter
+  domain: null,           // Some local attributes to be added to each parameter
   facet: { },             // A default, empty definition.
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
@@ -66,18 +66,18 @@ Solr.Faceting.prototype = {
     this.manager = manager;
     
     var fpars = a$.extend({}, FacetParameters),
-        locals = null,
+        domain = null,
         self = this;
 
     if (this.exclusion) {
-      this.locals = a$.extend(this.locals, { tag: this.id + "_tag" });
-      locals = { ex: this.id + "_tag" };
+      this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });
+      domain = { ex: this.id + "_tag" };
     }
 
     this.manager.addParameter('facet', true);
 
     if (this.facet.date !== undefined) {
-      this.manager.addParameter('facet.date', this.field, locals);
+      this.manager.addParameter('facet.date', this.field, domain);
       a$.extend(fpars, {
         'date.start': null,
         'date.end': null,
@@ -88,7 +88,7 @@ Solr.Faceting.prototype = {
       });
     }
     else if (this.facet.range !== undefined) {
-      this.manager.addParameter('facet.range', this.field, locals);
+      this.manager.addParameter('facet.range', this.field, domain);
       a$.extend(fpars, {
         'range.start': null,
         'range.end': null,
@@ -102,7 +102,7 @@ Solr.Faceting.prototype = {
     // related per-field parameters to the parameter store.
     else {
       this.facet.field = true;
-      this.manager.addParameter('facet.field', this.field, locals);
+      this.manager.addParameter('facet.field', this.field, domain);
     }
     
     fpars = a$.common(this.facet, fpars);
@@ -123,7 +123,7 @@ Solr.Faceting.prototype = {
 
     var index;
     if (!this.aggregate || !(index = this.manager.findParameters('fq', this.fieldRegExp)).length)
-      return this.manager.addParameter('fq', this.fq(value, exclude), this.locals);
+      return this.manager.addParameter('fq', this.fq(value, exclude), this.domain);
       
     // No we can obtain the parameter for aggregation.
     var param = this.manager.getParameter('fq', index[0]),
