@@ -50,7 +50,9 @@
   },
   "devDependencies": {
     "uglify-js": "latest",
-    "vows": "latest",
+    "jasmine-node": "latest",
+    "jasmine-core": "latest",
+    "underscore": "latest",
     "smash": "latest"
   },
   "scripts": {
@@ -58,7 +60,7 @@
     "preupdate": "npm update https://github.com/thejonan/asSys.js.git",
     
     "pretest": "rm -f solr-js2.* && export VERSION=`node -e 'console.log(require(\"./package.json\").version)'` && sed -E -e s/{{VERSION}}/$VERSION/ src/Core.js > src/start.js && smash src/start.js > solr-js2.js && rm -rf src/start.js",
-    "test": "vows && echo && uglifyjs -nc -mt < solr-js2.js > solr-js2.min.js && npm run-script widgets",
+    "test": "jasmine-node test && uglifyjs -nc -mt < solr-js2.js > solr-js2.min.js && npm run-script widgets",
     "widgets": "smash widgets/*.js > solr-js2.widgets.js && uglifyjs -nc -mt < solr-js2.widgets.js > solr-js2.widgets.min.js",
     "prepublish": "npm test && chmod a-w solr-js2.*.js && zip solr-js2.zip LICENSE solr-js2.*.js",
     "postpublish": "VERSION=`node -e 'console.log(require(\"./package.json\").version)'`; git push && git tag -am \"Release $VERSION.\" ${VERSION} && git push --tags"

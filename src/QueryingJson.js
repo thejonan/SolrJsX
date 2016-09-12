@@ -6,6 +6,7 @@ var renameParameter = function (name) {
     case 'rows': return 'limit';
     case 'start': return 'offset';
     case 'f': return 'facet';
+    case 'ex': return 'excludeTags';
     default: return name.replace(/^json\./, "");
   }
 };
@@ -19,23 +20,26 @@ Solr.QueryingJson.prototype = {
   prepareQuery: function () {
     var self = this,
         query = {};
-    a$.each(self.parameterStore, function (param, name) {
-      name = renameParameter(name).split(".");
+    
+    // TODO. Manu things to be done!
+    self.enumerateParameters(function (param) {
+      var m;
       
-      for (var i = 0, nl = name.length, q = query, n; i < nl - 1; ++i) {
-        n = name[i];
-        
-        if (i == 0 && n == 'f')
-          n = 'facet';
-        else if (i >= 2 && name == 'facet')
-          continue;
-          
-        if (q[n] === undefined)
-          q[n] = {};
-        q = q[n];
+      if (param.name === 'facet.field') {
+        var fid = param.value;
+        // TODO: extract the facet id from the domain obj
+        a$.path(query, "facet." + fid + ".field", param.value);
+        a$.path(query, "facet." + fid + ".type", "terms");
       }
-      
-      q[name[i]] = param.value;
+      else if (!!(m = param.name.match(/^json\.(.+)/))) {
+        a$.path(query, m[1], param.value);
+      }
+      else if (!!(m = param.name.match(/f\.(\w+)\.facet\.(\w+)/))) {
+        a$.path(query, 'facet.' + m[1] + '.' + m[2], param.value);
+      }
+      else {
+        a$.path(query, renameParameter(param.name), param.value);
+      }
     });
     
     console.log("Query data: " + JSON.stringify(query));

@@ -49,7 +49,7 @@ Solr.Management.prototype = {
     })
 
     if (cancel !== null) {
-      a$.act(cancel, self.onError, "Request cancelled");
+      a$.act(cancel, self.onError, "Request cancelled", cancel);
       return; 
     }
     

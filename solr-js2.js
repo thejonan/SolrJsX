@@ -56,7 +56,7 @@ Solr.Management.prototype = {
     })
 
     if (cancel !== null) {
-      a$.act(cancel, self.onError, "Request cancelled");
+      a$.act(cancel, self.onError, "Request cancelled", cancel);
       return; 
     }
     
@@ -185,12 +185,12 @@ Solr.parseParameter = function (str) {
     if (parse[2] != null) {
       var matches;
       while (matches = /([^\s=]+)=?(\S*)?/g.exec(parse[2])) {
-        if (param.locals === undefined)
-          param.locals = {};
+        if (param.domain === undefined)
+          param.domain = {};
         if (matches[2] == null)
-          param.locals['type'] = matches[1];
+          param.domain['type'] = matches[1];
         else
-          param.locals[matches[1]] = matches[2];
+          param.domain[matches[1]] = matches[2];
         parse[2] = parse[2].replace(matches[0], ''); // Safari's exec seems not to do this on its own
       }
     }
@@ -227,14 +227,14 @@ var paramIsMultiple = function (name) {
 
 Solr.Configuring.prototype = {
   /** Add a parameter. If `name` is an object - it is treated as a prepared
-    * parameter and `value` and `locals` are ignored.
+    * parameter and `value` and `domain` are ignored.
     */
-  addParameter: function (param, value, locals) {
+  addParameter: function (param, value, domain) {
     var name;
     
     if (typeof param !== 'object') {
       name = param;
-      param = { 'name': param, 'value': value, 'locals': locals };
+      param = { 'name': param, 'value': value, 'domain': domain };
     }
     else
       name = param.name;
@@ -332,6 +332,17 @@ Solr.Configuring.prototype = {
       val = !paramIsMultiple(name) ? this.parameterStore[name].value : this.parameterStore[name].map(function (p) { return p.value; });
 
     return val;
+  },
+  
+  /** Iterate over all parameters - including array-based, etc.
+    */
+  enumerateParameters: function (callback) {
+    a$.each(this.parameterStore, function (p) {
+      if (Array.isArray(p))
+        a$.each(p, callback);
+      else
+        callback(p);
+    });
   }
 };
 Solr.QueryingURL = function (obj) {
@@ -357,20 +368,16 @@ Solr.QueryingURL.prototype = {
     var self = this,
         query = [];
         
-    a$.each(self.parameterStore, function (plist, name) {
-      if (!Array.isArray(plist)) plist = [plist];
-      a$.each(plist, function (param) {
-        var prefix = [];
-            
-        a$.each(param.locals, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
-        prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
-        
-        if (param.value || prefix)
-          query.push(name + "=" + encodeURIComponent(prefix + paramValue(param.value || (name == 'q' && "*:*"))));
-        // For dismax request handlers, if the q parameter has local params, the
-        // q parameter must be set to a non-empty value.
-        
-      });
+    self.enumerateParameters(function (param) {
+      var prefix = [];
+          
+      a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
+      prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
+      
+      if (param.value || prefix)
+        query.push(param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || (param.name == 'q' && "*:*"))));
+      // For dismax request handlers, if the q parameter has local params, the
+      // q parameter must be set to a non-empty value.
     });
     
     return { url: '?' + query.join("&") };
@@ -389,6 +396,7 @@ var renameParameter = function (name) {
     case 'rows': return 'limit';
     case 'start': return 'offset';
     case 'f': return 'facet';
+    case 'ex': return 'excludeTags';
     default: return name.replace(/^json\./, "");
   }
 };
@@ -402,23 +410,26 @@ Solr.QueryingJson.prototype = {
   prepareQuery: function () {
     var self = this,
         query = {};
-    a$.each(self.parameterStore, function (param, name) {
-      name = renameParameter(name).split(".");
+    
+    // TODO. Manu things to be done!
+    self.enumerateParameters(function (param) {
+      var m;
       
-      for (var i = 0, nl = name.length, q = query, n; i < nl - 1; ++i) {
-        n = name[i];
-        
-        if (i == 0 && n == 'f')
-          n = 'facet';
-        else if (i >= 2 && name == 'facet')
-          continue;
-          
-        if (q[n] === undefined)
-          q[n] = {};
-        q = q[n];
+      if (param.name === 'facet.field') {
+        var fid = param.value;
+        // TODO: extract the facet id from the domain obj
+        a$.path(query, "facet." + fid + ".field", param.value);
+        a$.path(query, "facet." + fid + ".type", "terms");
       }
-      
-      q[name[i]] = param.value;
+      else if (!!(m = param.name.match(/^json\.(.+)/))) {
+        a$.path(query, m[1], param.value);
+      }
+      else if (!!(m = param.name.match(/f\.(\w+)\.facet\.(\w+)/))) {
+        a$.path(query, 'facet.' + m[1] + '.' + m[2], param.value);
+      }
+      else {
+        a$.path(query, renameParameter(param.name), param.value);
+      }
     });
     
     console.log("Query data: " + JSON.stringify(query));
@@ -461,11 +472,11 @@ Solr.Persistency.prototype = {
   
   persistentParams: [],   // Parameters that need to stay persistent between calls.
 
-  addParameter: function (param, value, locals) {
+  addParameter: function (param, value, domain) {
     // TODO Check if the parameter is persistent and store it.
     
     // And make the call to the "super".
-    a$.act(this, Solf.Configuring.prototype.addParameter, param, value, locals);
+    a$.act(this, Solf.Configuring.prototype.addParameter, param, value, domain);
     return param;
   },
   
@@ -495,7 +506,7 @@ Solr.Paging.prototype = {
   pageSize: 20,           // The default page size
   multivalue: false,      // If this filter allows multiple values
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
-  locals: null,
+  domain: null,
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
@@ -524,7 +535,7 @@ Solr.Paging.prototype = {
       return false;
     
     this.currentPage = page;
-    return this.manager.addParameter('start', (page - 1) * this.pageSize, this.locals);
+    return this.manager.addParameter('start', (page - 1) * this.pageSize, this.domain);
   },
   
   /** Sets or gets the current page
@@ -552,7 +563,7 @@ Solr.Paging.prototype = {
 
   /** We need to set all our internals.
     * NOTE: Don't forget to manually call this activity on the skill
-    * using {@code}a$.act(this, Solr.Paging.prototype.afterRequest);
+    * using {@code}a$.pass(this, <inheriting skill>, 'afterRequest');{@code}
     */
     
   afterRequest: function () {
@@ -587,7 +598,7 @@ Solr.Texting = function (obj) {
 
 Solr.Texting.prototype = {
   delayed: false,       // Number of milliseconds to delay the request
-  locals: null,         // Additional attributes to be adde to query parameter.
+  domain: null,         // Additional attributes to be adde to query parameter.
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
@@ -619,7 +630,7 @@ Solr.Texting.prototype = {
    */
   set: function (q) {
     var before = this.manager.getParameter('q'),
-        res = this.manager.addParameter('q', q, this.locals);
+        res = this.manager.addParameter('q', q, this.domain);
         after = this.manager.getParameter('q');
     return res && !a$.equal(before, after);
   },
@@ -724,7 +735,7 @@ Solr.Faceting.prototype = {
   multivalue: false,      // If this filter allows multiple values. Values can be arrays.
   aggregate: false,       // If additional values are aggregated in one filter.
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
-  locals: null,           // Some local attributes to be added to each parameter
+  domain: null,           // Some local attributes to be added to each parameter
   facet: { },             // A default, empty definition.
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
@@ -733,18 +744,18 @@ Solr.Faceting.prototype = {
     this.manager = manager;
     
     var fpars = a$.extend({}, FacetParameters),
-        locals = null,
+        domain = null,
         self = this;
 
     if (this.exclusion) {
-      this.locals = a$.extend(this.locals, { tag: this.id + "_tag" });
-      locals = { ex: this.id + "_tag" };
+      this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });
+      domain = { ex: this.id + "_tag" };
     }
 
     this.manager.addParameter('facet', true);
 
     if (this.facet.date !== undefined) {
-      this.manager.addParameter('facet.date', this.field, locals);
+      this.manager.addParameter('facet.date', this.field, domain);
       a$.extend(fpars, {
         'date.start': null,
         'date.end': null,
@@ -755,7 +766,7 @@ Solr.Faceting.prototype = {
       });
     }
     else if (this.facet.range !== undefined) {
-      this.manager.addParameter('facet.range', this.field, locals);
+      this.manager.addParameter('facet.range', this.field, domain);
       a$.extend(fpars, {
         'range.start': null,
         'range.end': null,
@@ -769,7 +780,7 @@ Solr.Faceting.prototype = {
     // related per-field parameters to the parameter store.
     else {
       this.facet.field = true;
-      this.manager.addParameter('facet.field', this.field, locals);
+      this.manager.addParameter('facet.field', this.field, domain);
     }
     
     fpars = a$.common(this.facet, fpars);
@@ -790,7 +801,7 @@ Solr.Faceting.prototype = {
 
     var index;
     if (!this.aggregate || !(index = this.manager.findParameters('fq', this.fieldRegExp)).length)
-      return this.manager.addParameter('fq', this.fq(value, exclude), this.locals);
+      return this.manager.addParameter('fq', this.fq(value, exclude), this.domain);
       
     // No we can obtain the parameter for aggregation.
     var param = this.manager.getParameter('fq', index[0]),

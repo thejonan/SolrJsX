@@ -6,7 +6,7 @@ Solr.Texting = function (obj) {
 
 Solr.Texting.prototype = {
   delayed: false,       // Number of milliseconds to delay the request
-  locals: null,         // Additional attributes to be adde to query parameter.
+  domain: null,         // Additional attributes to be adde to query parameter.
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
@@ -38,7 +38,7 @@ Solr.Texting.prototype = {
    */
   set: function (q) {
     var before = this.manager.getParameter('q'),
-        res = this.manager.addParameter('q', q, this.locals);
+        res = this.manager.addParameter('q', q, this.domain);
         after = this.manager.getParameter('q');
     return res && !a$.equal(before, after);
   },

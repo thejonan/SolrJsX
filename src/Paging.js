@@ -8,7 +8,7 @@ Solr.Paging.prototype = {
   pageSize: 20,           // The default page size
   multivalue: false,      // If this filter allows multiple values
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
-  locals: null,
+  domain: null,
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
@@ -37,7 +37,7 @@ Solr.Paging.prototype = {
       return false;
     
     this.currentPage = page;
-    return this.manager.addParameter('start', (page - 1) * this.pageSize, this.locals);
+    return this.manager.addParameter('start', (page - 1) * this.pageSize, this.domain);
   },
   
   /** Sets or gets the current page
@@ -65,7 +65,7 @@ Solr.Paging.prototype = {
 
   /** We need to set all our internals.
     * NOTE: Don't forget to manually call this activity on the skill
-    * using {@code}a$.act(this, Solr.Paging.prototype.afterRequest);
+    * using {@code}a$.pass(this, <inheriting skill>, 'afterRequest');{@code}
     */
     
   afterRequest: function () {

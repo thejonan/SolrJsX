@@ -7,68 +7,27 @@
 <!--<![endif]-->
 
 <head>
-<script src="../../jquery-1.10.2.js"></script>
-<script src="../../asSys/as-sys.js"></script>
+<link rel="shortcut icon" type="image/png" href="../node_modules/jasmine-core/lib/jasmine-core/jasmine_favicon.png">
+<link rel="stylesheet" type="text/css" href="../node_modules/jasmine-core/lib/jasmine-core/jasmine.css">
 
-<script src="../src/Core.js"></script>
-<script src="../src/Management.js"></script>
-<script src="../src/Configuring.js"></script>
-<script src="../src/QueryingURL.js"></script>
+<script type="text/javascript" src="../node_modules/jasmine-core/lib/jasmine-core/jasmine.js"></script>
+<script type="text/javascript" src="../node_modules/jasmine-core/lib/jasmine-core/jasmine-html.js"></script>
+<script type="text/javascript" src="../node_modules/jasmine-core/lib/jasmine-core/boot.js"></script>
 
-<script src="../src/Faceting.js"></script>
-<script src="../src/Texting.js"></script>
-<script src="../src/Paging.js"></script>
-
-<script lang="JavaScript">
-  var SolrManager = a$(Solr.Management, Solr.QueryingURL),
-      SolrFacet = a$(Solr.Faceting),
-      SolrCombi = a$(Solr.Texting, Solr.Paging),
-      
-      Manager = new SolrManager({
-        solrUrl : 'https://solr.ideaconsult.net/solr/enm_shard1_replica1/',
-        connector: jQuery,
-        onPrepare: function (settings) {  settings.url += "&wt=json&json.wrf=?"; },
-        parameters: {
-    			'facet' : true,
-    			'facet.field' : ['unit'],
-    			'facet.limit' : -1,
-    			'facet.mincount' : 1,
-          // https://cwiki.apache.org/confluence/display/solr/Collapse+and+Expand+Results
-    			'fq' : "{!collapse field=s_uuid}",
-    			'fl' : 'id,type_s,s_uuid,doc_uuid,topcategory,endpointcategory,guidance,substanceType,name,publicname,reference,reference_owner,interpretation_result,reference_year,content,owner_name,P-CHEM.PC_GRANULOMETRY_SECTION.SIZE,CASRN.CORE,CASRN.COATING,CASRN.CONSTITUENT,CASRN.ADDITIVE,CASRN.IMPURITY,EINECS.CONSTITUENT,EINECS.ADDITIVE,EINECS.IMPURITY,ChemicalName.CORE,ChemicalName.COATING,ChemicalName.CONSTITUENT,ChemicalName.ADDITIVE,ChemicalName.IMPURITY,TradeName.CONSTITUENT,TradeName.ADDITIVE,TradeName.IMPURITY,COMPOSITION.CORE,COMPOSITION.COATING,COMPOSITION.CONSTITUENT,COMPOSITION.ADDITIVE,COMPOSITION.IMPURITY',
-    // 			'fl' : "id,type_s,s_uuid,doc_uuid,loValue,upValue,topcategory,endpointcategory,effectendpoint,unit,guidance,substanceType,name,publicname,reference,reference_owner,e_hash,err,interpretation_result,textValue,reference_year,content,owner_name",
-    			'stats': true,			
-    			'json.nl' : "map",
-    			'expand' : true,
-    			'expand.rows' : 3,
-    			'q.alt': "*:*",
-    			'q': "*:*"
-    		}
-      }),
-      
-      Faceter = new SolrFacet ({
-        field: "substanceType",
-        multivalue: true,
-        aggregate: true,
-        facet: {
-          'mincount': 2,
-          'limit': 1,
-        }
-      }),
-      
-      TextPager = new SolrCombi({
-        delayed: 3000,
-        pageSize: 10
-      });
-
-
-  Manager.addListeners(Faceter, TextPager);
-  Manager.doRequest();
-  
-  var r1 = Manager.findParameters('fq', /substance/),
-      r2 = Manager.findParameters('fq', function (v) { return v.value.match(/substance/); }),
-      r3 = Manager.findParameters('fq', { name: 'fl', value: /substance/});
+<script type="text/javascript" src="../solr-js2.js"></script>
+<script type="text/javascript" src="../node_modules/underscore/underscore-min.js"></script>
+<script type="text/javascript">
+  var global = window;
+  function require(a) { 
+    if (a == "underscore" || a == "_")
+      return _;
+    else if (a == "asSys" || a == "a$")
+      return asSys;
+    else
+      return Solr;
+  }
 </script>
+<script type="text/javascript" src="SolrJs2Spec.js"></script>
 </head>
 <html>
 </html>
