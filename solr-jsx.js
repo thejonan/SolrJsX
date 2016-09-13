@@ -2,7 +2,7 @@
   * The Core, integrating for all skills
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 
@@ -17,7 +17,7 @@
   * General query management - actual requests, listeners, etc.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 Solr.Management = function (obj) {
@@ -181,7 +181,7 @@ Solr.Management.prototype = {
   * Parameter management skills.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 /** This is directly copied from AjaxSolr.
@@ -371,7 +371,7 @@ Solr.Configuring.prototype = {
   * SolrAjax compatibility skills.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 
@@ -382,8 +382,6 @@ Solr.Compatibility = function (obj) {
 
 
 Solr.Compatibility.prototype = {
-  __expects: [ Solr.Management, Solr.Configuring ],
-  
   store: {
     addByValue: function (name, value, locals) { return this.root.addParameter(name, value, locals); },
     removeByValue: function (name, value) { return this.root.removeParameters(name, indices); },
@@ -398,7 +396,7 @@ Solr.Compatibility.prototype = {
   * URL querying skills - stacking up all parameters for URL-baesd query.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 Solr.QueryingURL = function (obj) {
@@ -418,8 +416,6 @@ var paramValue = function (value) {
 }
 
 Solr.QueryingURL.prototype = {
-  __expects: [ Solr.Configuring ],
-  
   prepareParameter: function (param) {
     var prefix = [];
         
@@ -454,7 +450,7 @@ Solr.QueryingURL.prototype = {
   * for JSON based query.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd.
   */
   
 
@@ -479,7 +475,7 @@ Solr.QueryingJson = function (obj) {
 };
 
 Solr.QueryingJson.prototype = {
-  __expects: [ Solr.Configuring, Solr.QueryingURL ],
+  __expects: [ Solr.QueryingURL ],
   prepareQuery: function () {
     var self = this,
         urlQuery = [],
@@ -510,7 +506,7 @@ Solr.QueryingJson.prototype = {
   * Persistentcy for configured parameters skills.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 Solr.Persistency = function (obj) {
@@ -551,7 +547,7 @@ Solr.Persistency.prototype = {
   * Paging skills
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 Solr.Paging = function (obj) {
@@ -652,7 +648,7 @@ Solr.Paging.prototype = {
   * Free text search skills.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 Solr.Texting = function (obj) {
@@ -745,7 +741,7 @@ Solr.Texting.prototype = {
   * Faceting skills - maintenance of appropriate parameters.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 

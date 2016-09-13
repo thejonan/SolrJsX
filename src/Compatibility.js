@@ -2,7 +2,7 @@
   * SolrAjax compatibility skills.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 
@@ -13,8 +13,6 @@ Solr.Compatibility = function (obj) {
 
 
 Solr.Compatibility.prototype = {
-  __expects: [ Solr.Management, Solr.Configuring ],
-  
   store: {
     addByValue: function (name, value, locals) { return this.root.addParameter(name, value, locals); },
     removeByValue: function (name, value) { return this.root.removeParameters(name, indices); },

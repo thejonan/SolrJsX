@@ -2,7 +2,7 @@
   * URL querying skills - stacking up all parameters for URL-baesd query.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 Solr.QueryingURL = function (obj) {
@@ -22,8 +22,6 @@ var paramValue = function (value) {
 }
 
 Solr.QueryingURL.prototype = {
-  __expects: [ Solr.Configuring ],
-  
   prepareParameter: function (param) {
     var prefix = [];
         

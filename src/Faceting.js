@@ -2,7 +2,7 @@
   * Faceting skills - maintenance of appropriate parameters.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 

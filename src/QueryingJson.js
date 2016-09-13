@@ -3,7 +3,7 @@
   * for JSON based query.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd.
   */
   
 
@@ -28,7 +28,7 @@ Solr.QueryingJson = function (obj) {
 };
 
 Solr.QueryingJson.prototype = {
-  __expects: [ Solr.Configuring, Solr.QueryingURL ],
+  __expects: [ Solr.QueryingURL ],
   prepareQuery: function () {
     var self = this,
         urlQuery = [],

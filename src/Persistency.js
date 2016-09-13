@@ -2,7 +2,7 @@
   * Persistentcy for configured parameters skills.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 Solr.Persistency = function (obj) {

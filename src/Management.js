@@ -2,7 +2,7 @@
   * General query management - actual requests, listeners, etc.
   *
   * Author: Ivan Georgiev
-  * Copyright (C) 2016, IDEAConsult Ltd.
+  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
 Solr.Management = function (obj) {
