@@ -1,3 +1,10 @@
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Free text search skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
 Solr.Texting = function (obj) {
   a$.extend(true, this, obj);
   this.manager = null;

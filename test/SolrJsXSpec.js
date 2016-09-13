@@ -1,4 +1,4 @@
-var SolrJs2 = require("../"),
+var Solr = require("../"),
 		_ = require("underscore"),
 		customMatchers = {
 			toDeepEqual: function (util, customEqualityTesters) {
@@ -11,7 +11,7 @@ var SolrJs2 = require("../"),
 		};
 
 
-describe("SolrJs2:", function () {
+describe("SolrJsX:", function () {
 	// prepare the test for dual runs - browser & npm
 	beforeEach(function () {
 		var jself = typeof this.addMatchers === 'function' ? this : jasmine;

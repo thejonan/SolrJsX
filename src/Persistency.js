@@ -1,3 +1,10 @@
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Persistentcy for configured parameters skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
 Solr.Persistency = function (obj) {
   a$.extend(true, this, obj);
   this.storage = {};

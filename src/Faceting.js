@@ -1,3 +1,11 @@
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Faceting skills - maintenance of appropriate parameters.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
+
 /* http://wiki.apache.org/solr/SimpleFacetParameters */
 var FacetParameters = {
   'prefix': null,

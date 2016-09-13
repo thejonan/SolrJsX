@@ -1,3 +1,10 @@
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Parameter management skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
 /** This is directly copied from AjaxSolr.
   */  
 Solr.escapeValue = function (value) {

@@ -1,3 +1,11 @@
+/** SolrJsX Widgets - a neXt Solr queries JavaScript widget set.
+  * All-prepared Paging widget.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
+
 (function (Solr, a$, $) {
   if (Solr.Widgets === undefined)
     Solr.Widgets = {};

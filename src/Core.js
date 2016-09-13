@@ -1,3 +1,11 @@
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * The Core, integrating for all skills
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
+
 (function () {
   // Define this as a main object to put everything in
   Solr = { version: "{{VERSION}}" };
@@ -7,9 +15,9 @@
   
 import "Management";
 import "Configuring";
+import "Compatibility";
 import "QueryingURL";
 import "QueryingJson";
-import "QueryingFlexible";
 import "Persistency";
 import "Paging";
 import "Texting";

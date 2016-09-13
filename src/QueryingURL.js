@@ -1,3 +1,10 @@
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * URL querying skills - stacking up all parameters for URL-baesd query.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
 Solr.QueryingURL = function (obj) {
   a$.extend(true, this, obj);
 };
@@ -17,20 +24,25 @@ var paramValue = function (value) {
 Solr.QueryingURL.prototype = {
   __expects: [ Solr.Configuring ],
   
-  prepareQuery: function () {
-    var self = this,
-        query = [];
+  prepareParameter: function (param) {
+    var prefix = [];
         
-    self.enumerateParameters(function (param) {
-      var prefix = [];
-          
-      a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
-      prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
-      
-      if (param.value || prefix)
-        query.push(param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || (param.name == 'q' && "*:*"))));
-      // For dismax request handlers, if the q parameter has local params, the
-      // q parameter must be set to a non-empty value.
+    a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
+    prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
+    
+    // For dismax request handlers, if the q parameter has local params, the
+    // q parameter must be set to a non-empty value.
+    return param.value || prefix ? param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || (param.name == 'q' && "*:*"))) : null;
+  },
+  
+  prepareQuery: function () {
+    var query = [],
+        self = this;
+        
+    this.enumerateParameters(function (param) {
+      var p = self.prepareParameter(param);
+      if (p != null)
+        query.push(p);
     });
     
     return { url: '?' + query.join("&") };

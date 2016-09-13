@@ -1,3 +1,10 @@
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * General query management - actual requests, listeners, etc.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
 Solr.Management = function (obj) {
   a$.extend(true, this, obj);
   

@@ -1,9 +1,24 @@
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * The Core, integrating for all skills
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
+
 (function () {
   // Define this as a main object to put everything in
   Solr = { version: "0.9.0" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
+  
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * General query management - actual requests, listeners, etc.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
   
 Solr.Management = function (obj) {
   a$.extend(true, this, obj);
@@ -162,6 +177,13 @@ Solr.Management.prototype = {
     return this.listeners[id];
   }
 };
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Parameter management skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
 /** This is directly copied from AjaxSolr.
   */  
 Solr.escapeValue = function (value) {
@@ -345,6 +367,40 @@ Solr.Configuring.prototype = {
     });
   }
 };
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * SolrAjax compatibility skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
+
+Solr.Compatibility = function (obj) {
+  a$.extend(true, this, obj);
+  this.store.root = this;
+};
+
+
+Solr.Compatibility.prototype = {
+  __expects: [ Solr.Management, Solr.Configuring ],
+  
+  store: {
+    addByValue: function (name, value, locals) { return this.root.addParameter(name, value, locals); },
+    removeByValue: function (name, value) { return this.root.removeParameters(name, indices); },
+    find: function (name, needle) { return this.root.findParameters(name, neddle); },
+    
+    // TODO: Add another ParameterStore methods
+  },
+  
+  // TODO: Add AjaxSolr.AbstractManager methods that differ from ours.
+};
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * URL querying skills - stacking up all parameters for URL-baesd query.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
 Solr.QueryingURL = function (obj) {
   a$.extend(true, this, obj);
 };
@@ -364,20 +420,25 @@ var paramValue = function (value) {
 Solr.QueryingURL.prototype = {
   __expects: [ Solr.Configuring ],
   
-  prepareQuery: function () {
-    var self = this,
-        query = [];
+  prepareParameter: function (param) {
+    var prefix = [];
         
-    self.enumerateParameters(function (param) {
-      var prefix = [];
-          
-      a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
-      prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
-      
-      if (param.value || prefix)
-        query.push(param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || (param.name == 'q' && "*:*"))));
-      // For dismax request handlers, if the q parameter has local params, the
-      // q parameter must be set to a non-empty value.
+    a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
+    prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
+    
+    // For dismax request handlers, if the q parameter has local params, the
+    // q parameter must be set to a non-empty value.
+    return param.value || prefix ? param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || (param.name == 'q' && "*:*"))) : null;
+  },
+  
+  prepareQuery: function () {
+    var query = [],
+        self = this;
+        
+    this.enumerateParameters(function (param) {
+      var p = self.prepareParameter(param);
+      if (p != null)
+        query.push(p);
     });
     
     return { url: '?' + query.join("&") };
@@ -388,6 +449,16 @@ Solr.QueryingURL.prototype = {
   },
   
 };
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Json querying skills - putting all appropriate parameters
+  * for JSON based query.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
+
+// TODO: This has never been verified, actually!
 var renameParameter = function (name) {
   switch (name) {
     case 'fq': return 'filter';
@@ -397,7 +468,9 @@ var renameParameter = function (name) {
     case 'start': return 'offset';
     case 'f': return 'facet';
     case 'ex': return 'excludeTags';
-    default: return name.replace(/^json\./, "");
+    default:
+      var m = name.match(/^json\./);
+      return !m ? null : name.substr(m[0].length);
   }
 };
 
@@ -406,34 +479,26 @@ Solr.QueryingJson = function (obj) {
 };
 
 Solr.QueryingJson.prototype = {
-  __expects: [ Solr.Configuring ],
+  __expects: [ Solr.Configuring, Solr.QueryingURL ],
   prepareQuery: function () {
     var self = this,
-        query = {};
+        urlQuery = [],
+        dataQuery = {};
     
-    // TODO. Manu things to be done!
     self.enumerateParameters(function (param) {
-      var m;
-      
-      if (param.name === 'facet.field') {
-        var fid = param.value;
-        // TODO: extract the facet id from the domain obj
-        a$.path(query, "facet." + fid + ".field", param.value);
-        a$.path(query, "facet." + fid + ".type", "terms");
+      var m = renameParameter(param.name);
+      if (!m || typeof param.value !== 'object') {
+        m = a$.act(this, Solr.QueryingURL.prototype.prepareParam, param);
+        if (m != null)
+          urlQuery.push(m);
       }
-      else if (!!(m = param.name.match(/^json\.(.+)/))) {
-        a$.path(query, m[1], param.value);
-      }
-      else if (!!(m = param.name.match(/f\.(\w+)\.facet\.(\w+)/))) {
-        a$.path(query, 'facet.' + m[1] + '.' + m[2], param.value);
-      }
-      else {
-        a$.path(query, renameParameter(param.name), param.value);
-      }
+      // A JSON-valid parameter
+      else
+        a$.path(dataQuery, m, a$.extend({}, param.value, { domain: param.domain }));
     });
     
-    console.log("Query data: " + JSON.stringify(query));
-    return { data: query };
+    console.log("Query URL: " + urlQuery.join("&") + " Data: " + JSON.stringify(dataQuery));
+    return { url: '?' + urlQuery.join("&"), data: dataQuery };
   },
   
   parseQuery: function (response) {
@@ -441,27 +506,13 @@ Solr.QueryingJson.prototype = {
   },
   
 };
-Solr.QueryingFlexible = function (obj) {
-  a$.extend(true, this, obj);
-};
-
-
-Solr.QueryingFlexible.prototype = {
-  __expects: [ Solr.Configuring, Solr.QueryingURL, Solr.QueryingJson ],
-  jsonParameters: [ 'q' ],
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Persistentcy for configured parameters skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
   
-  prepareQuery: function () {
-    // TODO: Prepare the URL string for the query
-    return {
-      url: "",
-      data: ""
-    };
-  },
-  
-  parseQuery: function (response) {
-
-  }
-};
 Solr.Persistency = function (obj) {
   a$.extend(true, this, obj);
   this.storage = {};
@@ -496,6 +547,13 @@ Solr.Persistency.prototype = {
     
   }
 };
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Paging skills
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
 Solr.Paging = function (obj) {
   a$.extend(true, this, obj);
   this.manager = null;
@@ -590,6 +648,13 @@ Solr.Paging.prototype = {
     }
   }
 };
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Free text search skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
 Solr.Texting = function (obj) {
   a$.extend(true, this, obj);
   this.manager = null;
@@ -676,6 +741,14 @@ Solr.Texting.prototype = {
   }
   
 };
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Faceting skills - maintenance of appropriate parameters.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
+
 /* http://wiki.apache.org/solr/SimpleFacetParameters */
 var FacetParameters = {
   'prefix': null,

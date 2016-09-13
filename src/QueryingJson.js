@@ -1,3 +1,13 @@
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Json querying skills - putting all appropriate parameters
+  * for JSON based query.
+  *
+  * Author: Ivan Georgiev
+  * Copyright (C) 2016, IDEAConsult Ltd.
+  */
+  
+
+// TODO: This has never been verified, actually!
 var renameParameter = function (name) {
   switch (name) {
     case 'fq': return 'filter';
@@ -7,7 +17,9 @@ var renameParameter = function (name) {
     case 'start': return 'offset';
     case 'f': return 'facet';
     case 'ex': return 'excludeTags';
-    default: return name.replace(/^json\./, "");
+    default:
+      var m = name.match(/^json\./);
+      return !m ? null : name.substr(m[0].length);
   }
 };
 
@@ -16,34 +28,26 @@ Solr.QueryingJson = function (obj) {
 };
 
 Solr.QueryingJson.prototype = {
-  __expects: [ Solr.Configuring ],
+  __expects: [ Solr.Configuring, Solr.QueryingURL ],
   prepareQuery: function () {
     var self = this,
-        query = {};
+        urlQuery = [],
+        dataQuery = {};
     
-    // TODO. Manu things to be done!
     self.enumerateParameters(function (param) {
-      var m;
-      
-      if (param.name === 'facet.field') {
-        var fid = param.value;
-        // TODO: extract the facet id from the domain obj
-        a$.path(query, "facet." + fid + ".field", param.value);
-        a$.path(query, "facet." + fid + ".type", "terms");
+      var m = renameParameter(param.name);
+      if (!m || typeof param.value !== 'object') {
+        m = a$.act(this, Solr.QueryingURL.prototype.prepareParam, param);
+        if (m != null)
+          urlQuery.push(m);
       }
-      else if (!!(m = param.name.match(/^json\.(.+)/))) {
-        a$.path(query, m[1], param.value);
-      }
-      else if (!!(m = param.name.match(/f\.(\w+)\.facet\.(\w+)/))) {
-        a$.path(query, 'facet.' + m[1] + '.' + m[2], param.value);
-      }
-      else {
-        a$.path(query, renameParameter(param.name), param.value);
-      }
+      // A JSON-valid parameter
+      else
+        a$.path(dataQuery, m, a$.extend({}, param.value, { domain: param.domain }));
     });
     
-    console.log("Query data: " + JSON.stringify(query));
-    return { data: query };
+    console.log("Query URL: " + urlQuery.join("&") + " Data: " + JSON.stringify(dataQuery));
+    return { url: '?' + urlQuery.join("&"), data: dataQuery };
   },
   
   parseQuery: function (response) {
