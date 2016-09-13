@@ -58,6 +58,7 @@
   "scripts": {
     "preinstall": "npm install https://github.com/thejonan/asSys.js.git",
     "preupdate": "npm update https://github.com/thejonan/asSys.js.git",
+  	"postinstall": "mkdir -p test/lib/jasmine-core && cp -f node_modules/jasmine-core/lib/jasmine-core/*.js test/lib/jasmine-core && cp -f node_modules/jasmine-core/lib/jasmine-core/*.css test/lib/jasmine-core && mkdir -p test/lib/underscore && cp -f node_modules/underscore/*.js test/lib/underscore && mkdir -p test/lib/asSys && cp -f node_modules/asSys.js/*.js test/lib/asSys",
     
     "pretest": "rm -f solr-js2.* && export VERSION=`node -e 'console.log(require(\"./package.json\").version)'` && sed -E -e s/{{VERSION}}/$VERSION/ src/Core.js > src/start.js && smash src/start.js > solr-js2.js && rm -rf src/start.js",
     "test": "jasmine-node test && uglifyjs -nc -mt < solr-js2.js > solr-js2.min.js && npm run-script widgets",
