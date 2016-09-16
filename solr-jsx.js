@@ -812,6 +812,7 @@ Solr.Faceting.prototype = {
   init: function (manager) {
     this.manager = manager;
     
+    // TODO: React, based on the existence of QueryingJSON skill, or a property defined from it (in the manager).
     var fpars = a$.extend({}, FacetParameters),
         domain = null,
         self = this;
@@ -908,24 +909,37 @@ Solr.Faceting.prototype = {
     if (!this.multivalue)
       return this.clearValues();
     else {
-      var self = this;
+      var self = this,
+          removed = false;
 
-      return this.manager.removeParameters('fq', function (p) {
-        var parse;
+      this.manager.removeParameters('fq', function (p) {
+        var parse, rr;
 
         if (!p.value.match(self.fieldRegExp))
           return false;
-        else if (!self.aggregate)
-          return p.value.indexOf(facetValue(value)) >= 0;
+        else if (!self.aggregate) {
+          removed = removed || (rr = p.value.indexOf(facetValue(value)) >= 0);
+          return rr;
+        }
         
         parse = Solr.parseFacet(p.value);
         if (!Array.isArray(value))
           value = [ value ];
           
-        if (!Array.isArray(parse.value))
-          return value.indexOf(parse.value) >= 0;
+        if (!Array.isArray(parse.value)) {
+          removed = removed || (rr = value.indexOf(parse.value) >= 0);
+          return rr;
+        }
           
-        parse.value = parse.value.filter(function (v){ return value.indexOf(v) == -1; });
+        parse.value = parse.value.filter(function (v){
+          if (value.indexOf(v) == -1)
+            return true;
+          else {
+            removed = true;
+            return false;
+          }
+        });
+        
         if (!parse.value.length)
           return true;
         else if (parse.value.length == 1)
@@ -934,6 +948,8 @@ Solr.Faceting.prototype = {
         p.value = self.fq(parse.value);
         return false;
       });
+      
+      return removed;
     }
   },
   
