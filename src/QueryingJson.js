@@ -28,7 +28,8 @@ Solr.QueryingJson = function (obj) {
 };
 
 Solr.QueryingJson.prototype = {
-  __expects: [ Solr.QueryingURL ],
+  __depends: [ Solr.QueryingURL ],
+  
   prepareQuery: function () {
     var self = this,
         urlQuery = [],

@@ -27,7 +27,8 @@
   }
   
   Solr.Widgets.Pager.prototype = {
-    __expects: [ Solr.Paging ],
+    __depends: [ Solr.Paging ],
+    __expects: [ "nextPage", "previousPage" ],
     
     innerWindow: 4,                 // How many links are shown around the current page. Defaults to 4.
     outerWindow: 1,                 // How many links are around the first and the last page. Defaults to 1
@@ -145,21 +146,7 @@
           return '';
       }
     },
-  
-    /**
-     * @returns {Number} The page number of the previous page or null if no previous page.
-     */
-    previousPage: function () {
-      return this.currentPage > 1 ? (this.currentPage - 1) : null;
-    },
-  
-    /**
-     * @returns {Number} The page number of the next page or null if no next page.
-     */
-    nextPage: function () {
-      return this.currentPage < this.totalPages ? (this.currentPage + 1) : null;
-    },
-  
+    
     /**
      * An abstract hook for child implementations.
      *

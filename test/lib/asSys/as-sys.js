@@ -45,7 +45,7 @@
     return true;
   };
   var asSys = function() {
-    var skillmap = [], missing, skills = Array.prototype.slice.call(arguments, 0), A = function() {
+    var skillmap = [], expected = null, missing, skills = Array.prototype.slice.call(arguments, 0), A = function() {
       var agent = this, args = arguments;
       if (!agent.__initializing) {
         agent.__initializing = true;
@@ -59,10 +59,10 @@
       a = skills[i];
       if (typeof a === "function" && a.prototype !== undefined) {
         if (skillmap.indexOf(a) > -1) continue;
-        if (a.prototype.__expects != null) {
+        if (a.prototype.__depends != null) {
           missing = [ i, 0 ];
-          for (var s, j = 0, el = a.prototype.__expects.length; j < el; ++j) {
-            s = a.prototype.__expects[j];
+          for (var s, j = 0, el = a.prototype.__depends.length; j < el; ++j) {
+            s = a.prototype.__depends[j];
             if (skills.indexOf(s) == -1) missing.push(s);
           }
           if (missing.length > 2) {
@@ -70,6 +70,10 @@
             --i;
             continue;
           }
+        }
+        if (a.prototype.__expects != null) {
+          if (expected == null) expected = {};
+          for (var j = 0, el = a.prototype.__expects.length; j < el; ++j) expected[a.prototype.__expects[j]] = true;
         }
         skillmap.push(a);
         if (A.prototype === undefined) A.prototype = Object.create(a.prototype); else mergeObjects(true, false, 0, [ A.prototype, a.prototype ]);
@@ -81,6 +85,13 @@
         }
       }
     }
+    asSys.each(expected, function(v, m) {
+      if (A.prototype[m] == null) throw {
+        name: "Unmatched skill expectation",
+        message: "The expected method [" + m + "] was not found among provided skills.",
+        method: m
+      };
+    });
     Object.defineProperties(A.prototype, {
       __skills: {
         enumerable: false,

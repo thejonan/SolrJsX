@@ -475,7 +475,8 @@ Solr.QueryingJson = function (obj) {
 };
 
 Solr.QueryingJson.prototype = {
-  __expects: [ Solr.QueryingURL ],
+  __depends: [ Solr.QueryingURL ],
+  
   prepareQuery: function () {
     var self = this,
         urlQuery = [],
@@ -515,7 +516,7 @@ Solr.Persistency = function (obj) {
 };
 
 Solr.Persistency.prototype = {
-  __expects: [ Solr.Configuring ],
+  __depends: [ Solr.Configuring ],
   
   persistentParams: [],   // Parameters that need to stay persistent between calls.
 
@@ -523,7 +524,7 @@ Solr.Persistency.prototype = {
     // TODO Check if the parameter is persistent and store it.
     
     // And make the call to the "super".
-    a$.act(this, Solf.Configuring.prototype.addParameter, param, value, domain);
+    a$.pass(this, "addParameter", Solf.Configuring, param, value, domain);
     return param;
   },
   
@@ -534,7 +535,7 @@ Solr.Persistency.prototype = {
     // TODO Check if the parameter is persistent and store it.
     
     // And make the call to the "super".
-    a$.act(this, Solf.Configuring.prototype.removeParameters, indices);
+    a$.pass(this, "removeParameters", Solf.Configuring, indices);
   },
   
   /** The method that is invoked just before making the actual request.
