@@ -812,7 +812,6 @@ Solr.Faceting.prototype = {
   init: function (manager) {
     this.manager = manager;
     
-    // TODO: React, based on the existence of QueryingJSON skill, or a property defined from it (in the manager).
     var fpars = a$.extend({}, FacetParameters),
         domain = null,
         self = this;
@@ -951,6 +950,24 @@ Solr.Faceting.prototype = {
       
       return removed;
     }
+  },
+  
+  /**
+   * Tells whether given value is part of facet filter.
+   *
+   * @returns {Boolean} If the given value can be found
+   */      
+  hasValue: function (value) {
+    var indices = this.manager.findParameters('fq', this.fieldRegExp),
+        value = Solr.escapeValue(value);
+        
+    for (var p, i = 0, il = indices.length; i < il; ++i) {
+      p = this.manager.getParameter('fq', indices[i]);
+      if (p.value.replace(this.fieldRegExp, "").indexOf(value) > -1)
+        return true;
+    }
+    
+    return false;
   },
   
   /**

@@ -214,6 +214,24 @@ Solr.Faceting.prototype = {
   },
   
   /**
+   * Tells whether given value is part of facet filter.
+   *
+   * @returns {Boolean} If the given value can be found
+   */      
+  hasValue: function (value) {
+    var indices = this.manager.findParameters('fq', this.fieldRegExp),
+        value = Solr.escapeValue(value);
+        
+    for (var p, i = 0, il = indices.length; i < il; ++i) {
+      p = this.manager.getParameter('fq', indices[i]);
+      if (p.value.replace(this.fieldRegExp, "").indexOf(value) > -1)
+        return true;
+    }
+    
+    return false;
+  },
+  
+  /**
    * Removes all filter queries using the widget's facet field.
    *
    * @returns {Boolean} Whether a filter query was removed.
