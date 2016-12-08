@@ -1,14 +1,15 @@
-var Solr = require("../"),
-		_ = require("underscore"),
-		customMatchers = {
-			toDeepEqual: function (util, customEqualityTesters) {
-				return {
-					compare: function(actual, expected) {
-							return { pass: _.isEqual(actual, expected) };
-					}
-				}
+asSys = require("as-sys");
+_ = require("underscore");
+Solr = require("../");
+customMatchers = {
+	toDeepEqual: function (util, customEqualityTesters) {
+		return {
+			compare: function(actual, expected) {
+					return { pass: _.isEqual(actual, expected) };
 			}
-		};
+		}
+	}
+};
 
 
 describe("SolrJsX:", function () {

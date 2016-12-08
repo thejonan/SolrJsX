@@ -1,6 +1,6 @@
 {
   "name": "solr-jsx",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "A lightweight, JavaScript engine for building Solr requests",
   "keywords": [
     "solr",
@@ -8,7 +8,7 @@
     "extensible",
     "flexible"
   ],
-  "homepage": "http://jonan.info/SolrJsX/",
+  "homepage": "https://github.com/ideaconsult/SolrJsX/wiki/",
   "license": "MIT",
   "author": [
     {
@@ -18,7 +18,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/thejonan/SolrJsX"
+    "url": "https://github.com/ideaconsult/SolrJsX"
   },
   "main": "solr-jsx.js",
   "browser": "solr-jsx-full.js",
@@ -48,6 +48,9 @@
   "spm": {
     "main": "solr-jsx.js"
   },
+  "dependencies": {
+    "as-sys": "git+ssh://git@github.com/thejonan/asSys.js.git"
+  },
   "devDependencies": {
     "uglify-js": "latest",
     "jasmine-node": "latest",
@@ -56,12 +59,9 @@
     "smash": "latest"
   },
   "scripts": {
-    "preinstall": "npm install https://github.com/thejonan/asSys.js.git",
-    "preupdate": "npm update https://github.com/thejonan/asSys.js.git",
-    
-    "pretest": "rm -f solr-jsx.* && export VERSION=`node -e 'console.log(require(\"./package.json\").version)'` && sed -E -e s/{{VERSION}}/$VERSION/ src/Core.js > src/start.js && smash src/start.js > solr-jsx.js && rm -rf src/start.js",
+    "pretest": "rm -f solr-jsx.* && export VERSION=`node -e 'console.log(require(\"./package.json\").version)'` && sed -E -e \"s/\\{\\{VERSION\\}\\}/$VERSION/\" src/Core.js > src/start.js && smash src/start.js > solr-jsx.js && rm -rf src/start.js",
     "test": "jasmine-node test && uglifyjs -nc -mt < solr-jsx.js > solr-jsx.min.js && npm run-script widgets",
-    "posttest": "mkdir -p test/lib/jasmine-core && cp -f node_modules/jasmine-core/lib/jasmine-core/*.js test/lib/jasmine-core && cp -f node_modules/jasmine-core/lib/jasmine-core/*.css test/lib/jasmine-core && mkdir -p test/lib/underscore && cp -f node_modules/underscore/*.js test/lib/underscore && mkdir -p test/lib/asSys && cp -f node_modules/as-sys/*.js test/lib/asSys",
+    "posttest": "rsync node_modules/jasmine-core/lib/jasmine-core/*.js test/libs && rsync node_modules/jasmine-core/lib/jasmine-core/*.css test/libs && rsync node_modules/underscore/*.js test/libs && rsync node_modules/as-sys/*.js test/libs",
     
     "widgets": "smash widgets/*.js > solr-jsx.widgets.js && uglifyjs -nc -mt < solr-jsx.widgets.js > solr-jsx.widgets.min.js",
     "prepublish": "npm test && chmod a-w solr-jsx.*.js && zip solr-jsx.zip LICENSE solr-jsx.*.js",
