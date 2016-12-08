@@ -5,7 +5,9 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-
+  
+(function (Solr, a$){
+  
 /* http://wiki.apache.org/solr/SimpleFacetParameters */
 var FacetParameters = {
   'prefix': null,
@@ -368,3 +370,5 @@ Solr.Faceting.prototype = {
     return (exclude ? '-' : '') + this.field + ':' + facetValue(value);
   }
 };
+
+})(Solr, asSys);

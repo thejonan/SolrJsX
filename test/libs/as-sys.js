@@ -3,8 +3,10 @@
     var props = {}, a, keys;
     for (var i = start, al = arguments.length; i < al; ++i) {
       a = arguments[i];
-      keys = Object.keys(a);
-      for (var j = 0, kl = keys.length; j < kl; ++j) props[keys[j]] = true;
+      if (typeof a === "object" && a !== null) {
+        keys = Object.keys(a);
+        for (var j = 0, kl = keys.length; j < kl; ++j) props[keys[j]] = true;
+      }
     }
     return props;
   };
@@ -57,6 +59,11 @@
     };
     for (var i = 0, a; i < skills.length; ++i) {
       a = skills[i];
+      if (a == null) throw {
+        name: "Missing skill",
+        message: "The skill-set liseted [" + a + "] is missing.",
+        skill: s
+      };
       if (typeof a === "function" && a.prototype !== undefined) {
         if (skillmap.indexOf(a) > -1) continue;
         if (a.prototype.__depends != null) {
@@ -87,7 +94,7 @@
     }
     asSys.each(expected, function(v, m) {
       if (A.prototype[m] == null) throw {
-        name: "Unmatched skill expectation",
+        name: "Unmatched expectation",
         message: "The expected method [" + m + "] was not found among provided skills.",
         method: m
       };
@@ -101,7 +108,7 @@
     });
     return A;
   };
-  asSys.version = "0.9.0";
+  asSys.version = "0.10.1";
   asSys.equal = function(deepCompare) {
     var deep = deepCompare, start = 0, match = function(a, b, dig) {
       if (typeof a !== "object" || typeof b !== "object") return a === b; else if (dig !== false) {

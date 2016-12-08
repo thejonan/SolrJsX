@@ -5,7 +5,7 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-
+(function (Solr, a$){
 Solr.Compatibility = function (obj) {
   a$.extend(true, this, obj);
   this.store.root = this;
@@ -23,3 +23,5 @@ Solr.Compatibility.prototype = {
   
   // TODO: Add AjaxSolr.AbstractManager methods that differ from ours.
 };
+
+})(Solr, asSys);

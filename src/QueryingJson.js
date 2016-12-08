@@ -7,6 +7,8 @@
   */
   
 
+(function (Solr, a$){
+  
 // TODO: This has never been verified, actually!
 var renameParameter = function (name) {
   switch (name) {
@@ -56,3 +58,5 @@ Solr.QueryingJson.prototype = {
   },
   
 };
+
+})(Solr, asSys);

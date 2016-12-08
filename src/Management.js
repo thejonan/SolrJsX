@@ -5,6 +5,8 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
+(function (Solr, a$){
+  
 Solr.Management = function (obj) {
   a$.extend(true, this, obj);
   
@@ -68,10 +70,12 @@ Solr.Management.prototype = {
     settings.error = self.onError;
     settings.success = function (data) {
       self.parseQuery(self.response = data);
-      a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self); });
-      
+
+      // Now inform all the listeners
+      a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, data, servlet); });
+
       // Call this for Querying skills, if it is defined.
-      a$.act(self, self.parseResponse, self.response);
+      a$.act(self, self.parseResponse, data, servlet);
       
       // Time to call the passed on success handler.
       a$.act(self, self.onSuccess);
@@ -99,6 +103,7 @@ Solr.Management.prototype = {
     */
   init: function () {
     var self = this;
+    a$.pass(self, Solr.Management, "init");
     a$.each(this.listeners, function (l) {
       // Inform the listener that it has been added.
       a$.act(l, l.init, self);
@@ -136,11 +141,14 @@ Solr.Management.prototype = {
     * the listener is removed.
     */
   removeManyListeners: function (selector) {
+    if (typeof callback !== 'function')
+      throw { name: "Enumeration error", message: "Attempt to select-remove listeners with non-function 'selector': " + selector };
+      
     var self = this;
-    a$.each(self.listeners(function (l, id) {
+    a$.each(self.listeners, function (l, id) {
       if (selector(l, self))
         delete self.listeners[id];
-    }));
+    });
     
     return self;
   },
@@ -149,7 +157,7 @@ Solr.Management.prototype = {
     */
   enumerateListeners: function(callback, context) {
     if (typeof callback !== 'function')
-      return;
+      throw { name: "Enumeration error", message: "Attempt to enumerate listeners with non-function 'selector': " + callback };
       
     a$.each(this.listeners, function (l, id) {
       callback.call(l, l, id, context);
@@ -162,3 +170,5 @@ Solr.Management.prototype = {
     return this.listeners[id];
   }
 };
+
+})(Solr, asSys);

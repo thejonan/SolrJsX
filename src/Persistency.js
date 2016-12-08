@@ -5,6 +5,8 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
+(function (Solr, a$){
+  
 Solr.Persistency = function (obj) {
   a$.extend(true, this, obj);
   this.storage = {};
@@ -39,3 +41,5 @@ Solr.Persistency.prototype = {
     
   }
 };
+
+})(Solr, asSys);
