@@ -9,7 +9,6 @@
 (function () {
   // Define this as a main object to put everything in
   Solr = { version: "{{VERSION}}" };
-  asSys = require("as-sys");
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
