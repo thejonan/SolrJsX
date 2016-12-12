@@ -91,7 +91,10 @@ Solr.Management.prototype = {
     
     // Inform all our skills for the preparation.
     a$.broadcast(self, 'onPrepare', settings);
-
+    
+    // Call the custom provided preparation routines.
+    a$.act(self, self.onPrepare, settings);
+    
     // And make the damn call.
     return self.connector.ajax( settings );
   },

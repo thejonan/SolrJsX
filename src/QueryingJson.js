@@ -10,7 +10,7 @@
 (function (Solr, a$){
   
 var paramIsUrlOnly = function(name) {
-  return name.match(/^(json\.nl|json\.wrf|q)/);
+  return name.match(/^(json\.nl|json\.wrf|q|wt)/);
 };
 
 var paramJsonName = function (name) {
@@ -26,7 +26,7 @@ Solr.QueryingJson = function (obj) {
 Solr.QueryingJson.prototype = {
   __expects: [ "enumerateParameters" ],  
   prepareQuery: function () {
-    var url = [ "wt=json" ],
+    var url = [ ],
         json = { 'params': {} },
         paramValue = function (param) {
           if (paramIsUrlOnly(param.name)) {

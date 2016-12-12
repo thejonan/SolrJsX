@@ -74,7 +74,7 @@ describe("SolrJsX:", function () {
     	main.resetParameters();
     	main.addParameter("q", "f:v");
     	main.addParameter("rows", 20);
-    	expect(main.prepareQuery()).toEqual({ url: "?wt=json&q=f%3Av", contentType: "application/json", method: "POST", type: "POST", data: '{"params":{"rows":20}}' });
+    	expect(main.prepareQuery()).toEqual({ url: "?q=f%3Av", contentType: "application/json", method: "POST", type: "POST", data: '{"params":{"rows":20}}' });
   	});
   	
   	it ("Handles simple parameters", function () {
@@ -86,7 +86,7 @@ describe("SolrJsX:", function () {
     	
     	var q = main.prepareQuery();
     	
-    	expect(q.url).toBe("?wt=json&q=f%3Av&json.nl=map");
+    	expect(q.url).toBe("?q=f%3Av&json.nl=map");
     	expect(JSON.parse(q.data)).toEqual({ 
       	params: { rows: 20, fq: [ "field1:value1" ] }
       });
@@ -99,7 +99,7 @@ describe("SolrJsX:", function () {
     	main.addParameter("json.facet", { avg_price: "avg(price)" });
     	
     	var q = main.prepareQuery();
-    	expect(q.url).toBe("?wt=json&q=f%3Av");
+    	expect(q.url).toBe("?q=f%3Av");
     	expect(JSON.parse(q.data)).toEqual({ 
       	params: { rows: 20 },
       	facet: { avg_price: "avg(price)" }
@@ -114,7 +114,7 @@ describe("SolrJsX:", function () {
     	main.addParameter("json.query", "field4:value4");
     	
     	var q = main.prepareQuery();
-    	expect(q.url).toBe("?wt=json&q=f%3Av");
+    	expect(q.url).toBe("?q=f%3Av");
     	expect(JSON.parse(q.data)).toEqual({ 
       	params: { rows: 20 },
       	query: [ "field3:value3", "field4:value4" ]
