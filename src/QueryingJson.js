@@ -9,53 +9,71 @@
 
 (function (Solr, a$){
   
-// TODO: This has never been verified, actually!
-var renameParameter = function (name) {
-  switch (name) {
-    case 'fq': return 'filter';
-    case 'q': return 'query';
-    case 'fl': return 'fields';
-    case 'rows': return 'limit';
-    case 'start': return 'offset';
-    case 'f': return 'facet';
-    case 'ex': return 'excludeTags';
-    default:
-      var m = name.match(/^json\./);
-      return !m ? null : name.substr(m[0].length);
-  }
+var paramIsUrlOnly = function(name) {
+  return name.match(/^(json\.nl|json\.wrf|q)/);
+};
+
+var paramJsonName = function (name) {
+  var m = name.match(/^json\.?(.*)/);
+  return m && m[1];
 };
 
 Solr.QueryingJson = function (obj) {
+  this.useBody = true;
   a$.extend(true, this, obj);
 };
 
 Solr.QueryingJson.prototype = {
-  __depends: [ Solr.QueryingURL ],
-  
+  __expects: [ "enumerateParameters" ],  
   prepareQuery: function () {
-    var self = this,
-        urlQuery = [],
-        dataQuery = {};
-    
-    self.enumerateParameters(function (param) {
-      var m = renameParameter(param.name);
-      if (!m || typeof param.value !== 'object') {
-        m = a$.act(this, Solr.QueryingURL.prototype.prepareParam, param);
-        if (m != null)
-          urlQuery.push(m);
-      }
-      // A JSON-valid parameter
+    var url = [ "wt=json" ],
+        json = { 'params': {} },
+        paramValue = function (param) {
+          if (paramIsUrlOnly(param.name)) {
+            url.push(Solr.QueryingURL.prototype.prepareParameter(param));
+            return;
+          }
+          
+          // Now, make the rest of the test.
+          var val = null;
+          
+          if (typeof param.value === 'string')
+            val = Solr.stringifyDomain(param) + param.value;
+          else if (param.domain !== undefined)
+            val = a$.extend({}, param.value, { 'domain': param.domain });
+          else
+            val = param.value;
+            
+          return val;
+        };
+ 
+    // make shallow enumerator so that arrays are saved as such.
+    this.enumerateParameters(false, function (param) {
+      // Take care for some very special parameters...
+      var val = !Array.isArray(param) ? paramValue(param) : param.map(paramValue),
+          name = !Array.isArray(param) ? param.name : param[0].name,
+          jname = paramJsonName(name);
+
+      if (val == undefined)
+        return;
+      else if (jname !== null)
+        a$.path(json, jname, val);
       else
-        a$.path(dataQuery, m, a$.extend({}, param.value, { domain: param.domain }));
+        json.params[name] = val;
     });
-    
-    console.log("Query URL: " + urlQuery.join("&") + " Data: " + JSON.stringify(dataQuery));
-    return { url: '?' + urlQuery.join("&"), data: dataQuery };
+
+    json = JSON.stringify(json);
+    if (!this.useBody) {
+      url.push(encodeURIComponent(json));
+      return { url: '?' + url.join("&") };
+    }
+    else
+      return { url: '?' + url.join("&"), data: json, contentType: "application/json", type: "POST", method:"POST" };
   },
   
   parseQuery: function (response) {
 
-  },
+  }
   
 };
 
