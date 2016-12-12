@@ -34,6 +34,7 @@ Solr.Management = function (obj) {
 };
 
 Solr.Management.prototype = {
+  __expects: [ "prepareQuery" ],
   /** Parameters that can and are expected to be overriden during initialization
     */
   connector: null,      // The object for making the actual requests - jQuery object works pretty fine.
@@ -103,13 +104,9 @@ Solr.Management.prototype = {
         self.doRequest(self.pendingRequest);
     };
     
-
     // Inform all our skills for the preparation.
     a$.broadcast(self, 'onPrepare', settings);
 
-    // Give someone the opportunity to make some final tweaks.
-    a$.act(self, self.onPrepare, settings);
-    
     // And make the damn call.
     return self.connector.ajax( settings );
   },
@@ -188,13 +185,14 @@ Solr.Management.prototype = {
 
 })(Solr, asSys);
 /** SolrJsX library - a neXt Solr queries JavaScript library.
-  * Parameter management skills.
+  *
+  * Parameter management skills. Primary based on this description:
+  * http://yonik.com/solr-json-request-api/#Smart_merging_of_multiple_JSON_parameters
   *
   * Author: Ivan Georgiev
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-
 (function (Solr, a$){
 /** This is directly copied from AjaxSolr.
   */  
@@ -238,25 +236,28 @@ Solr.parseParameter = function (str) {
 };
 
 Solr.Configuring = function (obj) {
-  a$.extend(true, this, obj);
-  
   // Now make some reformating of initial parameters.
-  var self = this;
+  var self = this,
+      parameters = null;
       
-  this.parameterStore = {};
-  a$.each(this.parameters, function (p, name) {
+  if (obj != null) {
+    parameters = obj.parameters;
+    delete obj.parameters;  
+  }
+
+  a$.extend(true, this, obj);
+      
+  this.resetParameters();
+  a$.each(parameters, function (p, name) {
     if (typeof p === 'string')
       self.addParameter(Solr.parseParameter(name + '=' + p));
     else
       self.addParameter(name, p);
   });
-  // We no longer need this - free them.
-  delete obj.parameters;
-  delete this.parameters;
 };
 
 var paramIsMultiple = function (name) { 
-  return name.match(/^(?:bf|bq|facet\.date|facet\.date\.other|facet\.date\.include|facet\.field|facet\.pivot|facet\.range|facet\.range\.other|facet\.range\.include|facet\.query|fq|group\.field|group\.func|group\.query|pf|qf|stats\.field)$/);
+  return name.match(/^(?:bf|bq|facet\.date|facet\.date\.other|facet\.date\.include|facet\.field|facet\.pivot|facet\.range|facet\.range\.other|facet\.range\.include|facet\.query|fq|json\.query|json\.filter|group\.field|group\.func|group\.query|pf|qf|stats\.field)$/);
 };
 
 Solr.Configuring.prototype = {
@@ -268,7 +269,9 @@ Solr.Configuring.prototype = {
     
     if (typeof param !== 'object') {
       name = param;
-      param = { 'name': param, 'value': value, 'domain': domain };
+      param = { 'name': param, 'value': value };
+      if (domain !== undefined)
+        param.domain = domain;
     }
     else
       name = param.name;
@@ -370,13 +373,23 @@ Solr.Configuring.prototype = {
   
   /** Iterate over all parameters - including array-based, etc.
     */
-  enumerateParameters: function (callback) {
+  enumerateParameters: function (deep, callback) {
+    if (typeof deep !== 'boolean') {
+      callback = deep;
+      deep = true;
+    }
     a$.each(this.parameterStore, function (p) {
-      if (Array.isArray(p))
+      if (deep && Array.isArray(p))
         a$.each(p, callback);
       else
         callback(p);
     });
+  },
+  
+  /** Clears all the parameter store
+    */
+  resetParameters: function () {
+    this.parameterStore = {};
   }
 };
 
@@ -417,6 +430,13 @@ Solr.Compatibility.prototype = {
   
 (function (Solr, a$){
   
+Solr.stringifyDomain = function (param) {
+  var prefix = [];
+
+  a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
+  return prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
+};
+
 Solr.QueryingURL = function (obj) {
   a$.extend(true, this, obj);
 };
@@ -434,11 +454,9 @@ var paramValue = function (value) {
 }
 
 Solr.QueryingURL.prototype = {
+  __expects: [ "enumerateParameters" ],
   prepareParameter: function (param) {
-    var prefix = [];
-        
-    a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
-    prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
+    var prefix = Solr.stringifyDomain(param);
     
     // For dismax request handlers, if the q parameter has local params, the
     // q parameter must be set to a non-empty value.
@@ -460,7 +478,7 @@ Solr.QueryingURL.prototype = {
   
   parseQuery: function (response) {
 
-  },
+  }
   
 };
 
@@ -476,53 +494,71 @@ Solr.QueryingURL.prototype = {
 
 (function (Solr, a$){
   
-// TODO: This has never been verified, actually!
-var renameParameter = function (name) {
-  switch (name) {
-    case 'fq': return 'filter';
-    case 'q': return 'query';
-    case 'fl': return 'fields';
-    case 'rows': return 'limit';
-    case 'start': return 'offset';
-    case 'f': return 'facet';
-    case 'ex': return 'excludeTags';
-    default:
-      var m = name.match(/^json\./);
-      return !m ? null : name.substr(m[0].length);
-  }
+var paramIsUrlOnly = function(name) {
+  return name.match(/^(json\.nl|json\.wrf|q)/);
+};
+
+var paramJsonName = function (name) {
+  var m = name.match(/^json\.?(.*)/);
+  return m && m[1];
 };
 
 Solr.QueryingJson = function (obj) {
+  this.useBody = true;
   a$.extend(true, this, obj);
 };
 
 Solr.QueryingJson.prototype = {
-  __depends: [ Solr.QueryingURL ],
-  
+  __expects: [ "enumerateParameters" ],  
   prepareQuery: function () {
-    var self = this,
-        urlQuery = [],
-        dataQuery = {};
-    
-    self.enumerateParameters(function (param) {
-      var m = renameParameter(param.name);
-      if (!m || typeof param.value !== 'object') {
-        m = a$.act(this, Solr.QueryingURL.prototype.prepareParam, param);
-        if (m != null)
-          urlQuery.push(m);
-      }
-      // A JSON-valid parameter
+    var url = [ "wt=json" ],
+        json = { 'params': {} },
+        paramValue = function (param) {
+          if (paramIsUrlOnly(param.name)) {
+            url.push(Solr.QueryingURL.prototype.prepareParameter(param));
+            return;
+          }
+          
+          // Now, make the rest of the test.
+          var val = null;
+          
+          if (typeof param.value === 'string')
+            val = Solr.stringifyDomain(param) + param.value;
+          else if (param.domain !== undefined)
+            val = a$.extend({}, param.value, { 'domain': param.domain });
+          else
+            val = param.value;
+            
+          return val;
+        };
+ 
+    // make shallow enumerator so that arrays are saved as such.
+    this.enumerateParameters(false, function (param) {
+      // Take care for some very special parameters...
+      var val = !Array.isArray(param) ? paramValue(param) : param.map(paramValue),
+          name = !Array.isArray(param) ? param.name : param[0].name,
+          jname = paramJsonName(name);
+
+      if (val == undefined)
+        return;
+      else if (jname !== null)
+        a$.path(json, jname, val);
       else
-        a$.path(dataQuery, m, a$.extend({}, param.value, { domain: param.domain }));
+        json.params[name] = val;
     });
-    
-    console.log("Query URL: " + urlQuery.join("&") + " Data: " + JSON.stringify(dataQuery));
-    return { url: '?' + urlQuery.join("&"), data: dataQuery };
+
+    json = JSON.stringify(json);
+    if (!this.useBody) {
+      url.push(encodeURIComponent(json));
+      return { url: '?' + url.join("&") };
+    }
+    else
+      return { url: '?' + url.join("&"), data: json, contentType: "application/json", type: "POST", method:"POST" };
   },
   
   parseQuery: function (response) {
 
-  },
+  }
   
 };
 
