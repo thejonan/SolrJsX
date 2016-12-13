@@ -19,6 +19,7 @@ Solr.Management = function (obj) {
 };
 
 Solr.Management.prototype = {
+  __expects: [ "prepareQuery", "parseQuery" ],
   /** Parameters that can and are expected to be overriden during initialization
     */
   connector: null,      // The object for making the actual requests - jQuery object works pretty fine.
@@ -88,11 +89,10 @@ Solr.Management.prototype = {
         self.doRequest(self.pendingRequest);
     };
     
-
     // Inform all our skills for the preparation.
     a$.broadcast(self, 'onPrepare', settings);
-
-    // Give someone the opportunity to make some final tweaks.
+    
+    // Call the custom provided preparation routines.
     a$.act(self, self.onPrepare, settings);
     
     // And make the damn call.

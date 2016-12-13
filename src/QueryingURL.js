@@ -7,6 +7,13 @@
   
 (function (Solr, a$){
   
+Solr.stringifyDomain = function (param) {
+  var prefix = [];
+
+  a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
+  return prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
+};
+
 Solr.QueryingURL = function (obj) {
   a$.extend(true, this, obj);
 };
@@ -24,11 +31,9 @@ var paramValue = function (value) {
 }
 
 Solr.QueryingURL.prototype = {
+  __expects: [ "enumerateParameters" ],
   prepareParameter: function (param) {
-    var prefix = [];
-        
-    a$.each(param.domain, function (l, k) {  prefix.push((k !== 'type' ? k + '=' : '') + l); });
-    prefix = prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
+    var prefix = Solr.stringifyDomain(param);
     
     // For dismax request handlers, if the q parameter has local params, the
     // q parameter must be set to a non-empty value.
@@ -50,7 +55,7 @@ Solr.QueryingURL.prototype = {
   
   parseQuery: function (response) {
 
-  },
+  }
   
 };
 

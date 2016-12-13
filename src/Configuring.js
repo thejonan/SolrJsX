@@ -1,11 +1,12 @@
 /** SolrJsX library - a neXt Solr queries JavaScript library.
-  * Parameter management skills.
+  *
+  * Parameter management skills. Primary based on this description:
+  * http://yonik.com/solr-json-request-api/#Smart_merging_of_multiple_JSON_parameters
   *
   * Author: Ivan Georgiev
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-
 (function (Solr, a$){
 /** This is directly copied from AjaxSolr.
   */  
@@ -13,6 +14,9 @@ Solr.escapeValue = function (value) {
   // If the field value has a space, colon, quotation mark or forward slash
   // in it, wrap it in quotes, unless it is a range query or it is already
   // wrapped in quotes.
+  if (typeof value !== 'string')
+    value = value.toString();
+    
   if (value.match(/[ :\/"]/) && !value.match(/[\[\{]\S+ TO \S+[\]\}]/) && !value.match(/^["\(].*["\)]$/)) {
     return '"' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
   }
@@ -49,25 +53,28 @@ Solr.parseParameter = function (str) {
 };
 
 Solr.Configuring = function (obj) {
-  a$.extend(true, this, obj);
-  
   // Now make some reformating of initial parameters.
-  var self = this;
+  var self = this,
+      parameters = null;
       
-  this.parameterStore = {};
-  a$.each(this.parameters, function (p, name) {
+  if (obj != null) {
+    parameters = obj.parameters;
+    delete obj.parameters;  
+  }
+
+  a$.extend(true, this, obj);
+      
+  this.resetParameters();
+  a$.each(parameters, function (p, name) {
     if (typeof p === 'string')
       self.addParameter(Solr.parseParameter(name + '=' + p));
     else
       self.addParameter(name, p);
   });
-  // We no longer need this - free them.
-  delete obj.parameters;
-  delete this.parameters;
 };
 
 var paramIsMultiple = function (name) { 
-  return name.match(/^(?:bf|bq|facet\.date|facet\.date\.other|facet\.date\.include|facet\.field|facet\.pivot|facet\.range|facet\.range\.other|facet\.range\.include|facet\.query|fq|group\.field|group\.func|group\.query|pf|qf|stats\.field)$/);
+  return name.match(/^(?:bf|bq|facet\.date|facet\.date\.other|facet\.date\.include|facet\.field|facet\.pivot|facet\.range|facet\.range\.other|facet\.range\.include|facet\.query|fq|json\.query|json\.filter|group\.field|group\.func|group\.query|pf|qf|stats\.field)$/);
 };
 
 Solr.Configuring.prototype = {
@@ -79,7 +86,9 @@ Solr.Configuring.prototype = {
     
     if (typeof param !== 'object') {
       name = param;
-      param = { 'name': param, 'value': value, 'domain': domain };
+      param = { 'name': param, 'value': value };
+      if (domain !== undefined)
+        param.domain = domain;
     }
     else
       name = param.name;
@@ -181,13 +190,23 @@ Solr.Configuring.prototype = {
   
   /** Iterate over all parameters - including array-based, etc.
     */
-  enumerateParameters: function (callback) {
+  enumerateParameters: function (deep, callback) {
+    if (typeof deep !== 'boolean') {
+      callback = deep;
+      deep = true;
+    }
     a$.each(this.parameterStore, function (p) {
-      if (Array.isArray(p))
+      if (deep && Array.isArray(p))
         a$.each(p, callback);
       else
         callback(p);
     });
+  },
+  
+  /** Clears all the parameter store
+    */
+  resetParameters: function () {
+    this.parameterStore = {};
   }
 };
 
