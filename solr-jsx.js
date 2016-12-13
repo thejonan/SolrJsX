@@ -856,8 +856,7 @@ Solr.facetValue = function (value) {
  * Parses a facet filter from a parameter.
  *
  * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
- */    
-
+ */ 
 Solr.parseFacet = function (value) {
   var m = value.match(/^(-)?([^\s:]+):(.+)$/);
   
@@ -900,24 +899,28 @@ Solr.Faceting.prototype = {
     this.manager = manager;
     
     var fpars = a$.extend({}, FacetParameters),
-        domain = null,
+        exTag = null,
         self = this;
 
     if (this.exclusion) {
       this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });
-      domain = { ex: this.id + "_tag" };
+      exTag = this.id + "_tag";
     }
 
     if (this.useJson) {
       var facet = { type: "terms", field: this.field, mincount: 1, limit: -1 };
 
       this.fqName = "json.filter";
-      if (domain != null)
-        facet.domain = { excludeTags: domain.ex };
+      if (exTag != null)
+        facet.domain = { excludeTags: exTag };
   
       this.manager.addParameter('json.facet.' + this.id, a$.extend(facet, this.facet));
     }
     else {
+      var domain = { key: this.id };
+      if (exTag != null)
+        domain.ex = exTag;
+        
       this.fqName = "fq";
       this.manager.addParameter('facet', true);
       
