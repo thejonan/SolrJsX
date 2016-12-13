@@ -121,5 +121,45 @@ describe("SolrJsX:", function () {
       });
   	});
   	
-	})
+	}) // Json querying
+	
+	describe("Flat (URL) faceting", function () {
+    var facet = new (a$(Solr.Faceting))({ id: "test", field: "field" });
+	}); // Json faceting
+	
+	describe("Json API faceting", function () {
+    
+  	describe("Simple faceting", function () {
+      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingJson))();
+      var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", useJson: true });
+      main.resetParameters();
+      main.addListeners(facet);
+      main.init();
+      
+      it("Has built proper json configuration", function () {
+        var data = JSON.parse(main.prepareQuery().data);
+        expect(data.facet).toEqual({ "test": { field: "field", type: "terms", mincount: 1, limit: -1 } });
+      });
+      
+      // TODO: Add add/remove/has tests.
+    });
+    
+    describe("Faceting with exclusion", function () {
+      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingJson))();
+      var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", useJson: true, exclusion: true });
+      main.resetParameters();
+      main.addListeners(facet);
+      main.init();
+      
+      it("Has built proper json configuration", function () {
+        var data = JSON.parse(main.prepareQuery().data);
+        expect(data.facet).toEqual({ "test": { field: "field", type: "terms", mincount: 1, limit: -1, domain: { excludeTags: "test_tag" } } });
+      });
+
+      // TODO: Add add/remove/has tests.
+      
+    });
+	}); // Json faceting
+
+	
 });

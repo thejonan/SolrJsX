@@ -80,9 +80,7 @@ Solr.Faceting.prototype = {
     a$.pass(this, Solr.Faceting, "init", manager);
     this.manager = manager;
     
-    var fpars = a$.extend({}, FacetParameters),
-        exTag = null,
-        self = this;
+    var exTag = null;
 
     if (this.exclusion) {
       this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });
@@ -99,7 +97,10 @@ Solr.Faceting.prototype = {
       this.manager.addParameter('json.facet.' + this.id, a$.extend(facet, this.facet));
     }
     else {
-      var domain = { key: this.id };
+    var self = this,
+        fpars = a$.extend({}, FacetParameters),
+        domain = { key: this.id };
+        
       if (exTag != null)
         domain.ex = exTag;
         
