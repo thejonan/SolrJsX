@@ -34,7 +34,7 @@ Solr.Management = function (obj) {
 };
 
 Solr.Management.prototype = {
-  __expects: [ "prepareQuery" ],
+  __expects: [ "prepareQuery", "parseQuery" ],
   /** Parameters that can and are expected to be overriden during initialization
     */
   connector: null,      // The object for making the actual requests - jQuery object works pretty fine.

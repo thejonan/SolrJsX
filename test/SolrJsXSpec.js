@@ -36,7 +36,7 @@ describe("SolrJsX:", function () {
     	expect(main.getParameter("fq", 0)).toEqual({ name: "fq", value:"field2:value2" });
   	});
   	
-  	it(" Resets the parameters store", function () {
+  	it("Resets the parameters store", function () {
   	  var main = new (a$(Solr.Configuring))();
     	main.addParameter("fq", "field1:value1");
     	main.resetParameters();
