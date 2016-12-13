@@ -90,8 +90,6 @@ Solr.Management.prototype = {
       // Now inform all the listeners
       a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, data, servlet); });
 
-      a$.each(self.consumers, function (c) { a$.act(c, c.translateResponse, data, servlet); });
-
       // Call this for Querying skills, if it is defined.
       a$.act(self, self.parseResponse, data, servlet);
       
