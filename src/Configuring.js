@@ -14,6 +14,9 @@ Solr.escapeValue = function (value) {
   // If the field value has a space, colon, quotation mark or forward slash
   // in it, wrap it in quotes, unless it is a range query or it is already
   // wrapped in quotes.
+  if (typeof value !== 'string')
+    value = value.toString();
+    
   if (value.match(/[ :\/"]/) && !value.match(/[\[\{]\S+ TO \S+[\]\}]/) && !value.match(/^["\(].*["\)]$/)) {
     return '"' + value.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
   }
