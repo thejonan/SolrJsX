@@ -8,7 +8,7 @@
 
 (function () {
   // Define this as a main object to put everything in
-  Solr = { version: "0.10.0" };
+  Solr = { version: "0.10.1" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -144,10 +144,13 @@ Solr.Management.prototype = {
     return this;
   },
   
-  /** Remove one listener
+  /** Remove one listener. Can pass only the id.
     */
   removeListener: function (listener) {
-    delete this.listeners[listener.id];
+    if (typeof listener === "objcet")
+      listener = listener.id;
+      
+    delete this.listeners[listener];
     return this;
   },
   
@@ -156,12 +159,12 @@ Solr.Management.prototype = {
     * the listener is removed.
     */
   removeManyListeners: function (selector) {
-    if (typeof callback !== 'function')
+    if (typeof selector !== 'function')
       throw { name: "Enumeration error", message: "Attempt to select-remove listeners with non-function 'selector': " + selector };
       
     var self = this;
     a$.each(self.listeners, function (l, id) {
-      if (selector(l, self))
+      if (selector(l, id, self))
         delete self.listeners[id];
     });
     
