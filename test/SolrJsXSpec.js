@@ -1,5 +1,4 @@
 asSys = require("as-sys");
-_ = require("underscore");
 Solr = require("../");
 
 a$ = asSys;

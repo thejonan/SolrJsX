@@ -1,6 +1,6 @@
 {
   "name": "solr-jsx",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "A lightweight, JavaScript engine for building Solr requests",
   "keywords": [
     "solr",
@@ -55,13 +55,12 @@
     "uglify-js": "latest",
     "jasmine-node": "latest",
     "jasmine-core": "latest",
-    "underscore": "latest",
     "smash": "latest"
   },
   "scripts": {
     "pretest": "rm -f solr-jsx.* && export VERSION=`node -e 'console.log(require(\"./package.json\").version)'` && sed -E -e \"s/\\{\\{VERSION\\}\\}/$VERSION/\" src/Core.js > src/start.js && smash src/start.js > solr-jsx.js && rm -rf src/start.js",
     "test": "jasmine-node test && uglifyjs -nc -mt < solr-jsx.js > solr-jsx.min.js && npm run-script widgets",
-    "posttest": "rsync node_modules/jasmine-core/lib/jasmine-core/*.js test/libs && rsync node_modules/jasmine-core/lib/jasmine-core/*.css test/libs && rsync node_modules/underscore/*.js test/libs && rsync node_modules/as-sys/*.js test/libs",
+    "postinstall": "rsync node_modules/jasmine-core/lib/jasmine-core/*.js test/libs && rsync node_modules/jasmine-core/lib/jasmine-core/*.css test/libs && rsync node_modules/underscore/*.js test/libs && rsync node_modules/as-sys/*.js test/libs",
     
     "widgets": "smash widgets/*.js > solr-jsx.widgets.js && uglifyjs -nc -mt < solr-jsx.widgets.js > solr-jsx.widgets.min.js",
     "prepublish": "npm test && chmod a-w solr-jsx.*.js && zip solr-jsx.zip LICENSE solr-jsx.*.js",
