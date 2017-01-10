@@ -266,7 +266,7 @@ Solr.Configuring = function (obj) {
 };
 
 var paramIsMultiple = function (name) { 
-  return name.match(/^(?:bf|bq|facet\.date|facet\.date\.other|facet\.date\.include|facet\.field|facet\.pivot|facet\.range|facet\.range\.other|facet\.range\.include|facet\.query|fq|json\.query|json\.filter|group\.field|group\.func|group\.query|pf|qf|stats\.field)$/);
+  return name.match(/^(?:bf|bq|facet\.date|facet\.date\.other|facet\.date\.include|facet\.field|facet\.pivot|facet\.range|facet\.range\.other|facet\.range\.include|facet\.query|fq|fl|json\.query|json\.filter|group\.field|group\.func|group\.query|pf|qf|stats\.field)$/);
 };
 
 Solr.Configuring.prototype = {
