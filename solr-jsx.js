@@ -8,7 +8,7 @@
 
 (function () {
   // Define this as a main object to put everything in
-  Solr = { version: "0.10.3" };
+  Solr = { version: "0.10.4" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
