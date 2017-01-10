@@ -1,5 +1,4 @@
 asSys = require("as-sys");
-_ = require("underscore");
 Solr = require("../");
 
 a$ = asSys;
@@ -42,6 +41,38 @@ describe("SolrJsX:", function () {
     	main.resetParameters();
     	expect(main.parameterStore).toEqual({});
   	});
+	});
+	
+	describe("Listenning", function () {
+  	var aListener = { id: "a" },
+  	    topic = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+  	  	
+  	it("Can add listeners", function () {
+    	topic.addListeners(aListener);
+    	expect(a$.weight(topic.listeners)).toBe(1);
+  	});
+
+    it("Listener can be removed", function () {
+      topic.addListeners(aListener);
+      topic.removeListener("a");
+      expect(a$.weight(topic.listeners)).toBe(0);
+    })
+
+    it("Many consumers can be removed", function () {
+      topic.addListeners(aListener);
+      topic.addListeners({ id: "b" });
+      topic.removeManyListeners(function (c, i) { return i == "a"; });
+      expect(a$.weight(topic.listeners)).toBe(1);
+      expect(topic.getListener("b")).toBeDefined();
+    })
+    
+    it("Can enumerate consumers", function () {
+      topic.addListeners(aListener);
+      topic.addListeners({ id: "b" });
+      var ctx = { count: 0 };
+      topic.enumerateListeners(function (c, i, context) { ++context.count; }, ctx);
+      expect(ctx.count).toBe(2);
+    });
 	});
 	
 	describe("Making URL-based queries", function () {
@@ -160,6 +191,5 @@ describe("SolrJsX:", function () {
       
     });
 	}); // Json faceting
-
 	
 });

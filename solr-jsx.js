@@ -8,7 +8,7 @@
 
 (function () {
   // Define this as a main object to put everything in
-  Solr = { version: "0.10.0" };
+  Solr = { version: "0.10.3" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -85,13 +85,13 @@ Solr.Management.prototype = {
     // Prepare the handlers for both error and success.
     settings.error = self.onError;
     settings.success = function (data) {
-      self.parseQuery(self.response = data);
+      self.response = self.parseQuery(data);
 
       // Now inform all the listeners
-      a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, data, servlet); });
+      a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self.response, servlet); });
 
       // Call this for Querying skills, if it is defined.
-      a$.act(self, self.parseResponse, data, servlet);
+      a$.act(self, self.parseResponse, self.response, servlet);
       
       // Time to call the passed on success handler.
       a$.act(self, self.onSuccess);
@@ -144,10 +144,13 @@ Solr.Management.prototype = {
     return this;
   },
   
-  /** Remove one listener
+  /** Remove one listener. Can pass only the id.
     */
   removeListener: function (listener) {
-    delete this.listeners[listener.id];
+    if (typeof listener === "objcet")
+      listener = listener.id;
+      
+    delete this.listeners[listener];
     return this;
   },
   
@@ -156,12 +159,12 @@ Solr.Management.prototype = {
     * the listener is removed.
     */
   removeManyListeners: function (selector) {
-    if (typeof callback !== 'function')
+    if (typeof selector !== 'function')
       throw { name: "Enumeration error", message: "Attempt to select-remove listeners with non-function 'selector': " + selector };
       
     var self = this;
     a$.each(self.listeners, function (l, id) {
-      if (selector(l, self))
+      if (selector(l, id, self))
         delete self.listeners[id];
     });
     
@@ -483,7 +486,7 @@ Solr.QueryingURL.prototype = {
   },
   
   parseQuery: function (response) {
-
+    return response;
   }
   
 };
@@ -563,7 +566,13 @@ Solr.QueryingJson.prototype = {
   },
   
   parseQuery: function (response) {
-
+    if (response.responseHeader.params.json != null) {
+      var json = JSON.parse(response.responseHeader.params.json);
+      a$.extend(response.responseHeader.params, json, json.params);
+      delete response.responseHeader.params.json;
+    }
+    
+    return response;
   }
   
 };

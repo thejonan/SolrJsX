@@ -54,7 +54,7 @@ Solr.QueryingURL.prototype = {
   },
   
   parseQuery: function (response) {
-
+    return response;
   }
   
 };
