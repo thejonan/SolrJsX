@@ -374,12 +374,12 @@ Solr.Configuring.prototype = {
   /** Returns a parameter or an array of parameters with that name
     */
   getParameter: function (name, index) {
-    if (this.parameterStore[name] === undefined) {
-      var param = { 'name': name };
-      this.parameterStore[name] = paramIsMultiple(name) ? [ param ] : param;
-    }
-    
-    return (index == null || !paramIsMultiple(name)) ? this.parameterStore[name] : this.parameterStore[name][index];
+    var multi = paramIsMultiple(name);
+
+    if (this.parameterStore[name] === undefined)
+      return multi && index == null ? [] : { 'name': name };
+    else
+      return (index == null || !multi) ? this.parameterStore[name] : this.parameterStore[name][index];
   },
   
   /** Returns an array of values of all parameters with given name
@@ -1124,7 +1124,7 @@ Solr.Faceting.prototype = {
       facet_counts = this.manager.response.facet_counts;
       
     if (this.useJson === true)
-      return facet_counts[this.id].buckets;
+      return facet_counts.count > 0 ? facet_counts[this.id].buckets : [];
     else if (this.facet.field !== undefined)
       property = 'facet_fields';
     else if (this.facet.date !== undefined)

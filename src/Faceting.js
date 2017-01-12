@@ -278,7 +278,7 @@ Solr.Faceting.prototype = {
       facet_counts = this.manager.response.facet_counts;
       
     if (this.useJson === true)
-      return facet_counts[this.id].buckets;
+      return facet_counts.count > 0 ? facet_counts[this.id].buckets : [];
     else if (this.facet.field !== undefined)
       property = 'facet_fields';
     else if (this.facet.date !== undefined)
