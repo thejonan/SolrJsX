@@ -7,15 +7,21 @@
   
 (function (Solr, a$){
   
-Solr.Texting = function (obj) {
-  a$.extend(true, this, obj);
+Solr.Texting = function (settings) {
   this.manager = null;
   this.delayTimer = null;
+  
+  if (settings != null) {
+    this.delayed = settings.delayed || this.delayed;
+    this.domain = settings.domain || this.domain;
+    this.customResponse = settings.customResponse;
+  }
 };
 
 Solr.Texting.prototype = {
   delayed: false,       // Number of milliseconds to delay the request
   domain: null,         // Additional attributes to be adde to query parameter.
+  customResponse: null, // A custom response function, which if present invokes priavte doRequest.
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
@@ -26,17 +32,18 @@ Solr.Texting.prototype = {
   /** Make the actual filtering obeying the "delayed" settings.
     */
   doRequest: function () {
-    if (this.delayed == null)
-      return this.manager.doRequest();
+    var self = this,
+        doInvoke = function () {
+          self.manager.addParameter('start', 0);
+          self.manager.doRequest(self.customResponse);
+          self.delayTimer = null;
+        };
+    if (this.delayed == null || this.delayed < 10)
+      return doInvoke();
     else if (this.delayTimer != null)
       clearTimeout(this.delayTimer);
       
-    var self = this;
-    this.delayTimer = setTimeout(function () {
-      self.manager.addParameter('start', 0);
-      self.manager.doRequest();
-      self.delayTimer = null;
-    }, this.delayed);
+    this.delayTimer = setTimeout(doInvoke, this.delayed);
   },
   
   /**

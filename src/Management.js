@@ -36,12 +36,20 @@ Solr.Management.prototype = {
     processData: false,
   },
 
-  /** The method for performing the actual request.
+  /** The method for performing the actual request. You can provide custom servlet to invoke
+    * and/or custom `callback`, which, if present, will suppress the normal listener notification
+    * and make an private call and `callback notification.
     */
-  doRequest: function (servlet) {
+  doRequest: function (servlet, callback) {
     var self = this,
         cancel = null,
         settings = {};
+        
+    // fix the incoming parameters
+    if (typeof servlet === "function") {
+      callback = servlet;
+      servlet = self.servlet;
+    }
     
     // Suppress same request before this one is finished processing. We'll
     // remember that we're being asked and will make _one_ request afterwards.
@@ -72,11 +80,15 @@ Solr.Management.prototype = {
     settings.success = function (data) {
       self.response = self.parseQuery(data);
 
-      // Now inform all the listeners
-      a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self.response, servlet); });
-
-      // Call this for Querying skills, if it is defined.
-      a$.act(self, self.parseResponse, self.response, servlet);
+      if (typeof callback === "function")
+        callback(self.response);
+      else {
+        // Now inform all the listeners
+        a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self.response, servlet); });
+  
+        // Call this for Querying skills, if it is defined.
+        a$.act(self, self.parseResponse, self.response, servlet);  
+      }
       
       // Time to call the passed on success handler.
       a$.act(self, self.onSuccess);
