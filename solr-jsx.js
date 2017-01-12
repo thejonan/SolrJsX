@@ -516,7 +516,7 @@ Solr.QueryingURL.prototype = {
 (function (Solr, a$){
   
 var paramIsUrlOnly = function(name) {
-  return name.match(/^(json\.nl|json\.wrf|q|wt)/);
+  return name.match(/^(json\.nl|json\.wrf|q|wt|start)/);
 };
 
 var paramJsonName = function (name) {
