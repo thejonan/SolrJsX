@@ -7,7 +7,6 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-(function (Solr, a$){
 /** This is directly copied from AjaxSolr.
   */  
 Solr.escapeValue = function (value) {
@@ -209,5 +208,3 @@ Solr.Configuring.prototype = {
     this.parameterStore = {};
   }
 };
-
-})(Solr, asSys);

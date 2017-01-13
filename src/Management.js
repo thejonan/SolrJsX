@@ -5,8 +5,6 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-(function (Solr, a$){
-  
 Solr.Management = function (obj) {
   a$.extend(true, this, obj);
   
@@ -185,5 +183,3 @@ Solr.Management.prototype = {
     return this.listeners[id];
   }
 };
-
-})(Solr, asSys);

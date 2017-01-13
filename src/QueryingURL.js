@@ -5,8 +5,6 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-(function (Solr, a$){
-  
 Solr.stringifyDomain = function (param) {
   var prefix = [];
 
@@ -58,5 +56,3 @@ Solr.QueryingURL.prototype = {
   }
   
 };
-
-})(Solr, asSys);

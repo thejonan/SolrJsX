@@ -6,7 +6,7 @@
   */
   
 
-(function () {
+(function (a$) {
   // Define this as a main object to put everything in
   Solr = { version: "0.10.4" };
 
@@ -19,8 +19,6 @@
   * Author: Ivan Georgiev
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
-  
-(function (Solr, a$){
   
 Solr.Management = function (obj) {
   a$.extend(true, this, obj);
@@ -200,8 +198,6 @@ Solr.Management.prototype = {
     return this.listeners[id];
   }
 };
-
-})(Solr, asSys);
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   *
   * Parameter management skills. Primary based on this description:
@@ -211,7 +207,6 @@ Solr.Management.prototype = {
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-(function (Solr, a$){
 /** This is directly copied from AjaxSolr.
   */  
 Solr.escapeValue = function (value) {
@@ -413,8 +408,6 @@ Solr.Configuring.prototype = {
     this.parameterStore = {};
   }
 };
-
-})(Solr, asSys);
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   * SolrAjax compatibility skills.
   *
@@ -448,8 +441,6 @@ Solr.Compatibility.prototype = {
   * Author: Ivan Georgiev
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
-  
-(function (Solr, a$){
   
 Solr.stringifyDomain = function (param) {
   var prefix = [];
@@ -502,8 +493,6 @@ Solr.QueryingURL.prototype = {
   }
   
 };
-
-})(Solr, asSys);
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   * Json querying skills - putting all appropriate parameters
   * for JSON based query.
@@ -513,8 +502,6 @@ Solr.QueryingURL.prototype = {
   */
   
 
-(function (Solr, a$){
-  
 var paramIsUrlOnly = function(name) {
   return name.match(/^(json\.nl|json\.wrf|q|wt|start)/);
 };
@@ -588,16 +575,12 @@ Solr.QueryingJson.prototype = {
   }
   
 };
-
-})(Solr, asSys);
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   * Persistentcy for configured parameters skills.
   *
   * Author: Ivan Georgiev
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
-  
-(function (Solr, a$){
   
 Solr.Persistency = function (obj) {
   a$.extend(true, this, obj);
@@ -633,16 +616,12 @@ Solr.Persistency.prototype = {
     
   }
 };
-
-})(Solr, asSys);
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   * Paging skills
   *
   * Author: Ivan Georgiev
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
-  
-(function (Solr, a$){
   
 Solr.Paging = function (obj) {
   a$.extend(true, this, obj);
@@ -738,8 +717,6 @@ Solr.Paging.prototype = {
     }
   }
 };
-
-})(Solr, asSys);
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   * Free text search skills.
   *
@@ -747,45 +724,31 @@ Solr.Paging.prototype = {
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-(function (Solr, a$){
-  
 Solr.Texting = function (settings) {
   this.manager = null;
-  this.delayTimer = null;
   
   if (settings != null) {
-    this.delayed = settings.delayed || this.delayed;
     this.domain = settings.domain || this.domain;
     this.customResponse = settings.customResponse;
   }
 };
 
 Solr.Texting.prototype = {
-  delayed: false,       // Number of milliseconds to delay the request
   domain: null,         // Additional attributes to be adde to query parameter.
   customResponse: null, // A custom response function, which if present invokes priavte doRequest.
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
   init: function (manager) {
+    a$.pass(this, Solr.Texting, "init", manager);
     this.manager = manager;
   },
   
-  /** Make the actual filtering obeying the "delayed" settings.
+  /** Make the actual request.
     */
   doRequest: function () {
-    var self = this,
-        doInvoke = function () {
-          self.manager.addParameter('start', 0);
-          self.manager.doRequest(self.customResponse);
-          self.delayTimer = null;
-        };
-    if (this.delayed == null || this.delayed < 10)
-      return doInvoke();
-    else if (this.delayTimer != null)
-      clearTimeout(this.delayTimer);
-      
-    this.delayTimer = setTimeout(doInvoke, this.delayed);
+    this.manager.addParameter('start', 0);
+    this.manager.doRequest(self.customResponse);
   },
   
   /**
@@ -842,17 +805,12 @@ Solr.Texting.prototype = {
   }
   
 };
-
-})(Solr, asSys);
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   * Faceting skills - maintenance of appropriate parameters.
   *
   * Author: Ivan Georgiev
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
-  
-  
-(function (Solr, a$){
   
 /* http://wiki.apache.org/solr/SimpleFacetParameters */
 var FacetParameters = {
@@ -901,15 +859,15 @@ Solr.parseFacet = function (value) {
 };
 
 
-Solr.Faceting = function (obj) {
-  a$.extend(true, this, obj);
+Solr.Faceting = function (settings) {
+  a$.extend(true, this, settings);
   this.manager = null;
   
   // We cannot have aggregattion if we don't have multiple values.
   if (!this.multivalue)
     this.aggregate = false;
 
-  this.fieldRegExp = new RegExp('^-?' + this.field + ':');
+  this.fqRegExp = new RegExp('^-?' + this.field + ':');
 };
 
 Solr.Faceting.prototype = {
@@ -1000,8 +958,8 @@ Solr.Faceting.prototype = {
       this.clearValues();
 
     var index;
-    if (!this.aggregate || !(index = this.manager.findParameters(this.fqName, this.fieldRegExp)).length)
-      return this.manager.addParameter(this.fqName, this.fq(value, exclude), this.domain);
+    if (!this.aggregate || !(index = this.manager.findParameters(this.fqName, this.fqRegExp)).length)
+      return this.manager.addParameter(this.fqName, this.fqValue(value, exclude), this.domain);
       
     // No we can obtain the parameter for aggregation.
     var param = this.manager.getParameter(this.fqName, index[0]),
@@ -1026,7 +984,7 @@ Solr.Faceting.prototype = {
     if (!added)
       return false;
     
-    param.value = this.fq(parsed.value, exclude);
+    param.value = this.fqValue(parsed.value, exclude);
     return true;
   },
   
@@ -1045,7 +1003,7 @@ Solr.Faceting.prototype = {
       this.manager.removeParameters(this.fqName, function (p) {
         var parse, rr;
 
-        if (!p.value.match(self.fieldRegExp))
+        if (!p.value.match(self.fqRegExp))
           return false;
         else if (!self.aggregate) {
           removed = removed || (rr = p.value.indexOf(Solr.facetValue(value)) >= 0);
@@ -1075,7 +1033,7 @@ Solr.Faceting.prototype = {
         else if (parse.value.length == 1)
           parse.value = parse.value[0];
           
-        p.value = self.fq(parse.value);
+        p.value = self.fqValue(parse.value);
         return false;
       });
       
@@ -1089,12 +1047,12 @@ Solr.Faceting.prototype = {
    * @returns {Boolean} If the given value can be found
    */      
   hasValue: function (value) {
-    var indices = this.manager.findParameters(this.fqName, this.fieldRegExp),
+    var indices = this.manager.findParameters(this.fqName, this.fqRegExp),
         value = Solr.escapeValue(value);
         
     for (var p, i = 0, il = indices.length; i < il; ++i) {
       p = this.manager.getParameter(this.fqName, indices[i]);
-      if (p.value.replace(this.fieldRegExp, "").indexOf(value) > -1)
+      if (p.value.replace(this.fqRegExp, "").indexOf(value) > -1)
         return true;
     }
     
@@ -1107,7 +1065,7 @@ Solr.Faceting.prototype = {
    * @returns {Boolean} Whether a filter query was removed.
    */
   clearValues: function () {
-    return this.manager.removeParameters(this.fqName, this.fieldRegExp);
+    return this.manager.removeParameters(this.fqName, this.fqRegExp);
   },
   
   /**
@@ -1199,13 +1157,6 @@ Solr.Faceting.prototype = {
     return counts;
   },
   
-  /** A Wrapped for consolidating the request making.
-    */
-  doRequest: function () {
-    this.manager.addParameter('start', 0);
-    this.manager.doRequest();
-  },
-  
   /**
    * @param {String} value The value.
    * @returns {Function} Sends a request to Solr if it successfully adds a
@@ -1240,12 +1191,77 @@ Solr.Faceting.prototype = {
    * @param {Boolean} exclude Whether to exclude this fq parameter value.
    * @returns {String} An fq parameter value.
    */
-  fq: function (value, exclude) {
+  fqValue: function (value, exclude) {
     return (exclude ? '-' : '') + this.field + ':' + Solr.facetValue(value);
   }
 };
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Simple indoor requesting skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
+  */
+    
+Solr.Requesting = function (settings) {
+  this.manager = null;
+  if (!!settings) {
+    this.customResponse = settings.customResponse;
+    this.resetPage = !!settings.resetPage;
+  }
+};
 
-})(Solr, asSys);
+Solr.Requesting.prototype = {
+  resetPage: true,      // Whether to reset to the first page on each requst.
+  customResponse: null, // A custom response function, which if present invokes priavte doRequest.
+  
+  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+    */
+  init: function (manager) {
+    a$.pass(this, Solr.Requesting, "init", manager);
+    this.manager = manager;
+  },
+  
+  /** Make the actual request.
+    */
+  doRequest: function () {
+    if (this.resetPage)
+      this.manager.addParameter('start', 0);
+    this.manager.doRequest(self.customResponse);
+  }
+    
+};
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Delayed request skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
+  */
+  
+Solr.Delaying = function (settings) {
+  this.delayTimer = null;
+  this.delayed = settings && settings.delayed || this.delayed;
+};
+
+Solr.Delaying.prototype = {
+  delayed: false,       // Number of milliseconds to delay the request
+  
+  /** Make the actual request obeying the "delayed" settings.
+    */
+  doRequest: function () {
+    var self = this,
+        doInvoke = function () {
+          a$.pass(this, Solr.Delaying, "doRequest");
+          self.delayTimer = null;
+        };
+    if (this.delayed == null || this.delayed < 10)
+      return doInvoke();
+    else if (this.delayTimer != null)
+      clearTimeout(this.delayTimer);
+      
+    this.delayTimer = setTimeout(doInvoke, this.delayed);
+  }
+  
+};
 
   /** ... and finish with some module / export definition for according platforms
     */
@@ -1256,4 +1272,4 @@ Solr.Faceting.prototype = {
     if ( typeof define === "function" && define.amd )
       define(Solr);
   }
-})();
+})(asSys);

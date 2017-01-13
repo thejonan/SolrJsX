@@ -7,8 +7,6 @@
   */
   
 
-(function (Solr, a$){
-  
 var paramIsUrlOnly = function(name) {
   return name.match(/^(json\.nl|json\.wrf|q|wt|start)/);
 };
@@ -82,5 +80,3 @@ Solr.QueryingJson.prototype = {
   }
   
 };
-
-})(Solr, asSys);

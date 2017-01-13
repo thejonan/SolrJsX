@@ -1,23 +1,12 @@
 /** SolrJsX library - a neXt Solr queries JavaScript library.
-  * Faceting skills - maintenance of appropriate parameters.
+  * Ranging skills - maintenance of appropriate parameters.
   *
   * Author: Ivan Georgiev
-  * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
+  * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
   */
   
+  
 /* http://wiki.apache.org/solr/SimpleFacetParameters */
-var FacetParameters = {
-    'prefix': null,
-    'sort': null,
-    'limit': null,
-    'offset': null,
-    'mincount': null,
-    'missing': null,
-    'method': null,
-    'enum.cache.minDf': null
-  },
-  leadBracket = /\s*\(\s*?/,
-  rearBracket = /\s*\)\s*$/;
 
 /**
   * Forms the string for filtering of the current facet value
@@ -52,29 +41,25 @@ Solr.parseFacet = function (value) {
 };
 
 
-Solr.Faceting = function (settings) {
+Solr.Ranging = function (settings) {
   a$.extend(true, this, settings);
   this.manager = null;
   
-  // We cannot have aggregattion if we don't have multiple values.
-  if (!this.multivalue)
-    this.aggregate = false;
-
   this.fqRegExp = new RegExp('^-?' + this.field + ':');
 };
 
-Solr.Faceting.prototype = {
-  multivalue: false,      // If this filter allows multiple values. Values can be arrays.
-  aggregate: false,       // If additional values are aggregated in one filter.
+Solr.Ranging.prototype = {
+  multirange: false,      // If this filter allows union of multiple ranges.
+  
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
-  domain: null,           // Some local attributes to be added to each parameter
+  domain: null,           // Some local attributes to be added to each parameter.
   useJson: false,         // Whether to use the Json Facet API.
   facet: { },             // A default, empty definition.
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
   init: function (manager) {
-    a$.pass(this, Solr.Faceting, "init", manager);
+    a$.pass(this, Solr.Ranging, "init", manager);
     this.manager = manager;
     
     var exTag = null;
@@ -348,6 +333,13 @@ Solr.Faceting.prototype = {
       });
     }
     return counts;
+  },
+  
+  /** A Wrapped for consolidating the request making.
+    */
+  doRequest: function () {
+    this.manager.addParameter('start', 0);
+    this.manager.doRequest();
   },
   
   /**
