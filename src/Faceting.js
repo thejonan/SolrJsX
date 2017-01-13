@@ -16,8 +16,7 @@ var FacetParameters = {
     'method': null,
     'enum.cache.minDf': null
   },
-  leadBracket = /\s*\(\s*?/,
-  rearBracket = /\s*\)\s*$/;
+  bracketsRegExp = /\s*\(\s*?|\s*\)\s*$/;
 
 /**
   * Forms the string for filtering of the current facet value
@@ -42,10 +41,10 @@ Solr.parseFacet = function (value) {
   if (!m)
     return null;
   var res = { field: m[2], exclude: !!m[1] },
-      sarr = m[3].replace(leadBracket, "").replace(rearBracket, "").replace(/\\"/g, "%0022").match(/[^\s"]+|"[^"]+"/g);
+      sarr = m[3].replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/[^\s"]+|"[^"]+"/g);
 
   for (var i = 0, sl = sarr.length; i < sl; ++i)
-    sarr[i] = sarr[i].replace(/^"/, "").replace(/"$/, "").replace("%0022", '"');
+    sarr[i] = sarr[i].replace(/^"|"$/, "").replace("%0022", '"');
   
   res.value = sl > 1 ? sarr : sarr[0];
   return res;
@@ -350,35 +349,6 @@ Solr.Faceting.prototype = {
     return counts;
   },
   
-  /**
-   * @param {String} value The value.
-   * @returns {Function} Sends a request to Solr if it successfully adds a
-   *   filter query with the given value.
-   */
-  clickHandler: function (value) {
-    var self = this;
-    return function (e) {
-      if (self.addValue(value))
-        self.doRequest();
-        
-      return false;
-    };
-  },
-
-  /**
-   * @param {String} value The value.
-   * @returns {Function} Sends a request to Solr if it successfully removes a
-   *   filter query with the given value.
-   */
-  unclickHandler: function (value) {
-    var self = this;
-    return function (e) {
-      if (self.removeValue(value)) 
-        self.doRequest();
-        
-      return false;
-    };
-  },
    /**
    * @param {String} value The facet value.
    * @param {Boolean} exclude Whether to exclude this fq parameter value.

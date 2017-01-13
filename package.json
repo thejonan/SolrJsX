@@ -1,6 +1,6 @@
 {
   "name": "solr-jsx",
-  "version": "0.10.4",
+  "version": "0.11.0",
   "description": "A lightweight, JavaScript engine for building Solr requests",
   "keywords": [
     "solr",
@@ -30,16 +30,8 @@
       }
     },
     "files": [
-      "src/Core.js",
-      "src/Management.js",
-      "src/Configuring.js",
-      "src/Compatibility.js",
-      "src/QueryingURL.js",
-      "src/QueryingJson.js",
-      "src/Persistency.js",
-      "src/Texting.js",
-      "src/Paging.js",
-      "src/Faceting.js"
+      "src",
+      "widgets"
     ],
     "buildConfig": {
       "uglify": true

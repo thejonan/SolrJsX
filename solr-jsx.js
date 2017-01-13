@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.10.4" };
+  Solr = { version: "0.11.0" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -286,7 +286,7 @@ Solr.Configuring.prototype = {
     if (typeof param !== 'object') {
       name = param;
       param = { 'name': param, 'value': value };
-      if (domain !== undefined)
+      if (domain != null)
         param.domain = domain;
     }
     else
@@ -718,6 +718,134 @@ Solr.Paging.prototype = {
   }
 };
 /** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Simple indoor requesting skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
+  */
+    
+Solr.Requesting = function (settings) {
+  this.manager = null;
+  if (!!settings) {
+    this.customResponse = settings.customResponse;
+    this.resetPage = !!settings.resetPage;
+  }
+};
+
+Solr.Requesting.prototype = {
+  resetPage: true,      // Whether to reset to the first page on each requst.
+  customResponse: null, // A custom response function, which if present invokes priavte doRequest.
+  
+  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+    */
+  init: function (manager) {
+    a$.pass(this, Solr.Requesting, "init", manager);
+    this.manager = manager;
+  },
+  
+  /** Make the actual request.
+    */
+  doRequest: function () {
+    if (this.resetPage)
+      this.manager.addParameter('start', 0);
+    this.manager.doRequest(self.customResponse);
+  },
+  
+  /**
+   * @param {String} value The value.
+   * @returns {Function} Sends a request to Solr if it successfully adds a
+   *   filter query with the given value.
+   */
+  clickHandler: function (value) {
+    var self = this;
+    return function (e) {
+      if (self.addValue(value))
+        self.doRequest();
+        
+      return false;
+    };
+  },
+
+  /**
+   * @param {String} value The value.
+   * @returns {Function} Sends a request to Solr if it successfully removes a
+   *   filter query with the given value.
+   */
+  unclickHandler: function (value) {
+    var self = this;
+    return function (e) {
+      if (self.removeValue(value)) 
+        self.doRequest();
+        
+      return false;
+    };
+  }
+    
+};
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Delayed request skills.
+  *
+  * Author: Ivan Georgiev
+  * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
+  */
+  
+Solr.Delaying = function (settings) {
+  this.delayTimer = null;
+  this.delayed = settings && settings.delayed || this.delayed;
+};
+
+Solr.Delaying.prototype = {
+  delayed: false,       // Number of milliseconds to delay the request
+  
+  /** Make the actual request obeying the "delayed" settings.
+    */
+  doRequest: function () {
+    var self = this,
+        doInvoke = function () {
+          a$.pass(this, Solr.Delaying, "doRequest");
+          self.delayTimer = null;
+        };
+    if (this.delayed == null || this.delayed < 10)
+      return doInvoke();
+    else if (this.delayTimer != null)
+      clearTimeout(this.delayTimer);
+      
+    this.delayTimer = setTimeout(doInvoke, this.delayed);
+  }
+  
+};
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Added ability to give pattern to text/facet/range values.
+  *
+  * Author: Ivan Georgiev
+  * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
+  */
+    
+Solr.Patterning = function (settings) {
+  this.valuePattern = settings && settings.valuePattern || this.valuePattern;
+  var oldRE = this.fqRegExp.toString().replace(/^\/\^?|\/$/g,""),
+      newRE = "^" + 
+        a$.escapeRegExp(this.valuePattern.replace(/\{\{!?-\}\}/g, "-?").replace("{{v}}", "__v__"))
+          .replace("__v__", oldRE)
+          .replace("--?", "-?")
+          .replace("--", "");
+      
+  this.fqRegExp = new RegExp(newRE);
+};
+
+Solr.Patterning.prototype = {
+  valuePattern: "{{-}}{{v}}",   // The default pattern.
+  
+  fqValue: function (value, exclude) {
+    return this.valuePattern
+      .replace("{{-}}", exclude ? "-" : "")   // place the exclusion...
+      .replace("{{!-}}", exclude ? "" : "-")  // ... or negative exclusion.
+      .replace("{{v}}", a$.pass(this, Solr.Patterning, "fqValue", value, exclude)) // now put the actual value
+      .replace("--", ""); // and make sure there is not double-negative. TODO!
+  }
+  
+};
+/** SolrJsX library - a neXt Solr queries JavaScript library.
   * Free text search skills.
   *
   * Author: Ivan Georgiev
@@ -743,14 +871,7 @@ Solr.Texting.prototype = {
     a$.pass(this, Solr.Texting, "init", manager);
     this.manager = manager;
   },
-  
-  /** Make the actual request.
-    */
-  doRequest: function () {
-    this.manager.addParameter('start', 0);
-    this.manager.doRequest(self.customResponse);
-  },
-  
+    
   /**
    * Sets the main Solr query to the given string.
    *
@@ -823,8 +944,7 @@ var FacetParameters = {
     'method': null,
     'enum.cache.minDf': null
   },
-  leadBracket = /\s*\(\s*?/,
-  rearBracket = /\s*\)\s*$/;
+  bracketsRegExp = /\s*\(\s*?|\s*\)\s*$/;
 
 /**
   * Forms the string for filtering of the current facet value
@@ -849,10 +969,10 @@ Solr.parseFacet = function (value) {
   if (!m)
     return null;
   var res = { field: m[2], exclude: !!m[1] },
-      sarr = m[3].replace(leadBracket, "").replace(rearBracket, "").replace(/\\"/g, "%0022").match(/[^\s"]+|"[^"]+"/g);
+      sarr = m[3].replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/[^\s"]+|"[^"]+"/g);
 
   for (var i = 0, sl = sarr.length; i < sl; ++i)
-    sarr[i] = sarr[i].replace(/^"/, "").replace(/"$/, "").replace("%0022", '"');
+    sarr[i] = sarr[i].replace(/^"|"$/, "").replace("%0022", '"');
   
   res.value = sl > 1 ? sarr : sarr[0];
   return res;
@@ -1157,35 +1277,6 @@ Solr.Faceting.prototype = {
     return counts;
   },
   
-  /**
-   * @param {String} value The value.
-   * @returns {Function} Sends a request to Solr if it successfully adds a
-   *   filter query with the given value.
-   */
-  clickHandler: function (value) {
-    var self = this;
-    return function (e) {
-      if (self.addValue(value))
-        self.doRequest();
-        
-      return false;
-    };
-  },
-
-  /**
-   * @param {String} value The value.
-   * @returns {Function} Sends a request to Solr if it successfully removes a
-   *   filter query with the given value.
-   */
-  unclickHandler: function (value) {
-    var self = this;
-    return function (e) {
-      if (self.removeValue(value)) 
-        self.doRequest();
-        
-      return false;
-    };
-  },
    /**
    * @param {String} value The facet value.
    * @param {Boolean} exclude Whether to exclude this fq parameter value.
@@ -1196,71 +1287,105 @@ Solr.Faceting.prototype = {
   }
 };
 /** SolrJsX library - a neXt Solr queries JavaScript library.
-  * Simple indoor requesting skills.
+  * Ranging skills - maintenance of appropriate parameters.
   *
   * Author: Ivan Georgiev
   * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
   */
-    
-Solr.Requesting = function (settings) {
-  this.manager = null;
-  if (!!settings) {
-    this.customResponse = settings.customResponse;
-    this.resetPage = !!settings.resetPage;
-  }
+  
+  
+/**
+  * Forms the string for filtering of the current facet value
+  */
+Solr.rangeValue = function (value) {
+  return Array.isArray(value) ? "[" + Solr.escapeValue(value[0] || "*") + " TO " + Solr.escapeValue(value[1] || "*") + "]" : Solr.escapeValue(value);
 };
 
-Solr.Requesting.prototype = {
-  resetPage: true,      // Whether to reset to the first page on each requst.
-  customResponse: null, // A custom response function, which if present invokes priavte doRequest.
+/**
+ * Parses a facet filter from a parameter.
+ *
+ * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
+ */ 
+Solr.parseRange = function (value) {
+  var m = value.match(/(-?)([^\s:]+):\s*\[\s*([^\s]+)\s+TO\s+([^\s]+)\s*\]/);
+  return !!m ? { field: m[2], exclude: !!m[1], value: [ m[3], m[4] ] } : null
+};
+
+
+Solr.Ranging = function (settings) {
+  a$.extend(true, this, settings);
+  this.manager = null;
+  
+  this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*[^\\s]+\\s+TO\\s+[^\\s]+\\s*\\]");
+};
+
+Solr.Ranging.prototype = {
+  multirange: false,      // If this filter allows union of multiple ranges.  
+  exclusion: false,       // Whether to exclude THIS field from filtering from itself.
+  domain: null,           // Some local attributes to be added to each parameter.
+  useJson: false,         // Whether to use the Json Facet API.
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
   init: function (manager) {
-    a$.pass(this, Solr.Requesting, "init", manager);
+    a$.pass(this, Solr.Ranging, "init", manager);
     this.manager = manager;
+    
+    if (this.exclusion)
+      this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });
+
+    this.fqName = this.useJson ? "json.filter" : "fq";
   },
   
-  /** Make the actual request.
-    */
-  doRequest: function () {
-    if (this.resetPage)
-      this.manager.addParameter('start', 0);
-    this.manager.doRequest(self.customResponse);
-  }
-    
-};
-/** SolrJsX library - a neXt Solr queries JavaScript library.
-  * Delayed request skills.
-  *
-  * Author: Ivan Georgiev
-  * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
-  */
-  
-Solr.Delaying = function (settings) {
-  this.delayTimer = null;
-  this.delayed = settings && settings.delayed || this.delayed;
-};
+  /**
+   * Add a facet filter parameter to the Manager
+   *
+   * @returns {Boolean} Whether the filter was added.
+   */    
 
-Solr.Delaying.prototype = {
-  delayed: false,       // Number of milliseconds to delay the request
+  addValue: function (value, exclude) {
+    // TODO: Handle the multirange case.
+    this.clearValues();
+    return this.manager.addParameter(this.fqName, this.fqValue(value, exclude), this.domain);
+  },
   
-  /** Make the actual request obeying the "delayed" settings.
-    */
-  doRequest: function () {
-    var self = this,
-        doInvoke = function () {
-          a$.pass(this, Solr.Delaying, "doRequest");
-          self.delayTimer = null;
-        };
-    if (this.delayed == null || this.delayed < 10)
-      return doInvoke();
-    else if (this.delayTimer != null)
-      clearTimeout(this.delayTimer);
-      
-    this.delayTimer = setTimeout(doInvoke, this.delayed);
+  /**
+   * Removes a value for filter query.
+   *
+   * @returns {Boolean} Whether a filter query was removed.
+   */    
+  removeValue: function (value) {
+    // TODO: Handle the multirange case.
+    return this.clearValues();
+  },
+  
+  /**
+   * Tells whether given value is part of facet filter.
+   *
+   * @returns {Boolean} If the given value can be found
+   */      
+  hasValue: function (value) {
+    // TODO: Handle the multirange case.
+    return this.manager.findParameters(this.fqName, this.fqRegExp) != null;
+  },
+  
+  /**
+   * Removes all filter queries using the widget's facet field.
+   *
+   * @returns {Boolean} Whether a filter query was removed.
+   */
+  clearValues: function () {
+    return this.manager.removeParameters(this.fqName, this.fqRegExp);
+  },
+  
+   /**
+   * @param {String} value The facet value.
+   * @param {Boolean} exclude Whether to exclude this fq parameter value.
+   * @returns {String} An fq parameter value.
+   */
+  fqValue: function (value, exclude) {
+    return (exclude ? '-' : '') + this.field + ':' + Solr.rangeValue(value);
   }
-  
 };
 
   /** ... and finish with some module / export definition for according platforms

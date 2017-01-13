@@ -24,14 +24,7 @@ Solr.Texting.prototype = {
     a$.pass(this, Solr.Texting, "init", manager);
     this.manager = manager;
   },
-  
-  /** Make the actual request.
-    */
-  doRequest: function () {
-    this.manager.addParameter('start', 0);
-    this.manager.doRequest(self.customResponse);
-  },
-  
+    
   /**
    * Sets the main Solr query to the given string.
    *

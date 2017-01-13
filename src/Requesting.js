@@ -30,6 +30,36 @@ Solr.Requesting.prototype = {
     if (this.resetPage)
       this.manager.addParameter('start', 0);
     this.manager.doRequest(self.customResponse);
+  },
+  
+  /**
+   * @param {String} value The value.
+   * @returns {Function} Sends a request to Solr if it successfully adds a
+   *   filter query with the given value.
+   */
+  clickHandler: function (value) {
+    var self = this;
+    return function (e) {
+      if (self.addValue(value))
+        self.doRequest();
+        
+      return false;
+    };
+  },
+
+  /**
+   * @param {String} value The value.
+   * @returns {Function} Sends a request to Solr if it successfully removes a
+   *   filter query with the given value.
+   */
+  unclickHandler: function (value) {
+    var self = this;
+    return function (e) {
+      if (self.removeValue(value)) 
+        self.doRequest();
+        
+      return false;
+    };
   }
     
 };

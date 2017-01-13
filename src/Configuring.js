@@ -86,7 +86,7 @@ Solr.Configuring.prototype = {
     if (typeof param !== 'object') {
       name = param;
       param = { 'name': param, 'value': value };
-      if (domain !== undefined)
+      if (domain != null)
         param.domain = domain;
     }
     else

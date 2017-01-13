@@ -20,10 +20,12 @@ import "QueryingURL";
 import "QueryingJson";
 import "Persistency";
 import "Paging";
-import "Texting";
-import "Faceting";
 import "Requesting";
 import "Delaying";
+import "Patterning";
+import "Texting";
+import "Faceting";
+import "Ranging";
 
   /** ... and finish with some module / export definition for according platforms
     */

@@ -192,4 +192,71 @@ describe("SolrJsX:", function () {
     });
 	}); // Json faceting
 	
+	describe("Ranging ablities", function () {
+    var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+    var range = new (a$(Solr.Ranging))({ id: "test", field: "field" });
+    main.addListeners(range);
+    main.init();
+    
+    it ("Property adds a simple range", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:[3 TO 4]"}]);
+    });
+    
+    it ("Property adds an excluded range", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ], true);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-field:[3 TO 4]"}]);
+    });
+
+    it ("Property removes a range", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ]);
+      range.addValue([ 1, 5 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:[1 TO 5]"}]);
+    });
+    
+    it ("Adds right open range", function () {
+      main.resetParameters();
+      range.addValue([ 3 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:[3 TO *]"}]);
+    });
+    
+    it ("Adds left open range", function () {
+      main.resetParameters();
+      range.addValue([ null, 4 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:[* TO 4]"}]);
+    });
+    
+	});
+	
+	describe("Patterning ablities", function () {
+    var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+    var range = new (a$(Solr.Ranging, Solr.Patterning))({ id: "test", field: "field", valuePattern:"-(condition:yes OR -{{v}})" });
+    main.addListeners(range);
+    main.init();
+    
+    it ("Property adds a simple range", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR -field:[3 TO 4])"}]);
+    });
+    
+    it ("Property adds an excluded range", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ], true);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR field:[3 TO 4])"}]);
+    });
+
+    it ("Property overrides a value", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ]);
+      range.addValue([ 1, 5 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR -field:[1 TO 5])"}]);
+    });
+    
+	});
+	
+	
 });
