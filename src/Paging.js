@@ -13,11 +13,9 @@ Solr.Paging = function (obj) {
 
 Solr.Paging.prototype = {
   pageSize: 20,           // The default page size
-  multivalue: false,      // If this filter allows multiple values
-  exclusion: false,       // Whether to exclude THIS field from filtering from itself.
   domain: null,
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager
     */
   init: function (manager) {
     this.manager = manager;

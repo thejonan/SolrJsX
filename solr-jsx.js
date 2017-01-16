@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.11.3" };
+  Solr = { version: "0.11.4" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -638,11 +638,9 @@ Solr.Paging = function (obj) {
 
 Solr.Paging.prototype = {
   pageSize: 20,           // The default page size
-  multivalue: false,      // If this filter allows multiple values
-  exclusion: false,       // Whether to exclude THIS field from filtering from itself.
   domain: null,
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager
     */
   init: function (manager) {
     this.manager = manager;
@@ -743,7 +741,7 @@ Solr.Requesting.prototype = {
   resetPage: true,      // Whether to reset to the first page on each requst.
   customResponse: null, // A custom response function, which if present invokes priavte doRequest.
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager.
     */
   init: function (manager) {
     a$.pass(this, Solr.Requesting, "init", manager);
@@ -872,7 +870,7 @@ Solr.Texting.prototype = {
   domain: null,         // Additional attributes to be adde to query parameter.
   customResponse: null, // A custom response function, which if present invokes priavte doRequest.
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager.
     */
   init: function (manager) {
     a$.pass(this, Solr.Texting, "init", manager);
@@ -1019,7 +1017,7 @@ Solr.Faceting.prototype = {
       if (exTag != null)
         facet.domain = { excludeTags: exTag };
   
-      this.manager.addParameter('json.facet.' + this.id, a$.extend(facet, this.facet));
+      this.manager.addParameter('json.facet.' + this.id, a$.extend(true, facet, this.facet));
     }
     else {
     var self = this,
@@ -1173,7 +1171,7 @@ Solr.Faceting.prototype = {
         
     for (var p, i = 0, il = indices.length; i < il; ++i) {
       p = this.manager.getParameter(this.fqName, indices[i]);
-      if (p.value.replace(this.fqRegExp, "").indexOf(value) > -1)
+      if (this.fqParse(p.value).indexOf(value) > -1)
         return true;
     }
     
@@ -1336,7 +1334,7 @@ Solr.Ranging.prototype = {
   domain: null,           // Some local attributes to be added to each parameter.
   useJson: false,         // Whether to use the Json Facet API.
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager.
     */
   init: function (manager) {
     a$.pass(this, Solr.Ranging, "init", manager);

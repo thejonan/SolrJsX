@@ -37,7 +37,7 @@ Solr.Ranging.prototype = {
   domain: null,           // Some local attributes to be added to each parameter.
   useJson: false,         // Whether to use the Json Facet API.
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager.
     */
   init: function (manager) {
     a$.pass(this, Solr.Ranging, "init", manager);

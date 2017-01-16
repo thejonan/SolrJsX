@@ -84,7 +84,7 @@ Solr.Faceting.prototype = {
       if (exTag != null)
         facet.domain = { excludeTags: exTag };
   
-      this.manager.addParameter('json.facet.' + this.id, a$.extend(facet, this.facet));
+      this.manager.addParameter('json.facet.' + this.id, a$.extend(true, facet, this.facet));
     }
     else {
     var self = this,
@@ -238,7 +238,7 @@ Solr.Faceting.prototype = {
         
     for (var p, i = 0, il = indices.length; i < il; ++i) {
       p = this.manager.getParameter(this.fqName, indices[i]);
-      if (p.value.replace(this.fqRegExp, "").indexOf(value) > -1)
+      if (this.fqParse(p.value).indexOf(value) > -1)
         return true;
     }
     

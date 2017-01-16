@@ -17,7 +17,7 @@ Solr.Requesting.prototype = {
   resetPage: true,      // Whether to reset to the first page on each requst.
   customResponse: null, // A custom response function, which if present invokes priavte doRequest.
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager.
     */
   init: function (manager) {
     a$.pass(this, Solr.Requesting, "init", manager);
