@@ -36,18 +36,12 @@ Solr.facetValue = function (value) {
  * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
  */ 
 Solr.parseFacet = function (value) {
-  var m = value.match(/^(-)?([^\s:]+):(.+)$/);
-  
-  if (!m)
-    return null;
-  var res = { field: m[2], exclude: !!m[1] },
-      sarr = m[3].replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/[^\s"]+|"[^"]+"/g);
+  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/[^\s"]+|"[^"]+"/g);
 
   for (var i = 0, sl = sarr.length; i < sl; ++i)
     sarr[i] = sarr[i].replace(/^"|"$/, "").replace("%0022", '"');
   
-  res.value = sl > 1 ? sarr : sarr[0];
-  return res;
+  return sl > 1 ? sarr : sarr[0];
 };
 
 
@@ -59,7 +53,7 @@ Solr.Faceting = function (settings) {
   if (!this.multivalue)
     this.aggregate = false;
 
-  this.fqRegExp = new RegExp('^-?' + this.field + ':');
+  this.fqRegExp = new RegExp('^-?' + this.field + ':(.+)');
 };
 
 Solr.Faceting.prototype = {
@@ -155,28 +149,28 @@ Solr.Faceting.prototype = {
       
     // No we can obtain the parameter for aggregation.
     var param = this.manager.getParameter(this.fqName, index[0]),
-        parsed = Solr.parseFacet(param.value),
+        parsed = Solr.parseFacet(param.value.match(this.fqRegExp)[1]),
         added = false;
     
     if (!Array.isArray(value))
       value = [value];
     for (var v, i = 0, vl = value.length; i < vl; ++i) {
       v = value[i];
-      if (parsed.value == v)
+      if (parsed == v)
         continue;
-      else if (Array.isArray(parsed.value) && parsed.value.indexOf(v) >= 0)
+      else if (Array.isArray(parsed) && parsed.indexOf(v) >= 0)
         continue;
         
-      if (typeof parsed.value === 'string')
-        parsed.value = [ parsed.value ];
-      parsed.value.push(v);
+      if (typeof parsed === 'string')
+        parsed = [ parsed ];
+      parsed.push(v);
       added = true;
     }
     
     if (!added)
       return false;
     
-    param.value = this.fqValue(parsed.value, exclude);
+    param.value = this.fqValue(parsed, exclude);
     return true;
   },
   
@@ -357,4 +351,5 @@ Solr.Faceting.prototype = {
   fqValue: function (value, exclude) {
     return (exclude ? '-' : '') + this.field + ':' + Solr.facetValue(value);
   }
+    
 };

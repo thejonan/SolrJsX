@@ -172,12 +172,24 @@ describe("SolrJsX:", function () {
         expect(data.facet).toEqual({ "test": { field: "field", type: "terms", mincount: 1, limit: -1 } });
       });
       
-      // TODO: Add add/remove/has tests.
+      it ("Property adds a simple value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        expect(main.getParameter('json.filter')).toEqual([ { name: 'json.filter', value: "field:foo"} ]);
+      });
+      
+      it ("Property overrides a value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        expect(main.getParameter('json.filter')).toEqual([ { name: 'json.filter', value: "field:bar"} ]);
+      });
+  
     });
     
     describe("Faceting with exclusion", function () {
       var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingJson))();
-      var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", useJson: true, exclusion: true });
+      var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", exclusion: true, useJson: true });
       main.resetParameters();
       main.addListeners(facet);
       main.init();
@@ -190,6 +202,64 @@ describe("SolrJsX:", function () {
       // TODO: Add add/remove/has tests.
       
     });
+    
+    describe("Faceting with multi-values and aggregation", function () {
+      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+      var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", multivalue: true, aggregate: true });
+      main.resetParameters();
+      main.addListeners(facet);
+      main.init();
+      
+      it ("Property adds a simple value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:foo"} ]);
+      });
+      
+      it ("Property add more values a value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:(foo bar)"} ]);
+      });
+    });
+
+    describe("Patterned faceting with multi-values and aggregation", function () {
+      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+      var facet = new (a$(Solr.Faceting, Solr.Patterning))({ 
+        id: "test", 
+        field: "field", 
+        multivalue: true, 
+        aggregate: true,
+        valuePattern:"-(condition:yes OR -{{v}})"
+      });
+      main.resetParameters();
+      main.addListeners(facet);
+      main.init();
+      
+      it ("Property adds a simple value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR -field:foo)"} ]);
+      });
+      
+      it ("Property add more values a value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR -field:(foo bar))"} ]);
+      });
+
+      it ("Property skips same value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        facet.addValue("foo");
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR -field:(foo bar))"} ]);
+      });
+      
+    });
+    
 	}); // Json faceting
 	
 	describe("Ranging ablities", function () {
