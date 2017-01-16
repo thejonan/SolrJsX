@@ -5,9 +5,6 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-  
-(function (Solr, a$){
-  
 /* http://wiki.apache.org/solr/SimpleFacetParameters */
 var FacetParameters = {
     'prefix': null,
@@ -19,8 +16,7 @@ var FacetParameters = {
     'method': null,
     'enum.cache.minDf': null
   },
-  leadBracket = /\s*\(\s*?/,
-  rearBracket = /\s*\)\s*$/;
+  bracketsRegExp = /^\s*\(\s*|\s*\)\s*$/g;
 
 /**
   * Forms the string for filtering of the current facet value
@@ -40,30 +36,24 @@ Solr.facetValue = function (value) {
  * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
  */ 
 Solr.parseFacet = function (value) {
-  var m = value.match(/^(-)?([^\s:]+):(.+)$/);
-  
-  if (!m)
-    return null;
-  var res = { field: m[2], exclude: !!m[1] },
-      sarr = m[3].replace(leadBracket, "").replace(rearBracket, "").replace(/\\"/g, "%0022").match(/[^\s"]+|"[^"]+"/g);
+  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/"[^\s:\/"]+"|[^\s"]+/g);
 
   for (var i = 0, sl = sarr.length; i < sl; ++i)
-    sarr[i] = sarr[i].replace(/^"/, "").replace(/"$/, "").replace("%0022", '"');
+    sarr[i] = sarr[i].replace(/^"|"$/, "").replace("%0022", '"');
   
-  res.value = sl > 1 ? sarr : sarr[0];
-  return res;
+  return sl > 1 ? sarr : sarr[0];
 };
 
 
-Solr.Faceting = function (obj) {
-  a$.extend(true, this, obj);
+Solr.Faceting = function (settings) {
+  a$.extend(true, this, settings);
   this.manager = null;
   
   // We cannot have aggregattion if we don't have multiple values.
   if (!this.multivalue)
     this.aggregate = false;
 
-  this.fieldRegExp = new RegExp('^-?' + this.field + ':');
+  this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)');
 };
 
 Solr.Faceting.prototype = {
@@ -154,33 +144,33 @@ Solr.Faceting.prototype = {
       this.clearValues();
 
     var index;
-    if (!this.aggregate || !(index = this.manager.findParameters(this.fqName, this.fieldRegExp)).length)
-      return this.manager.addParameter(this.fqName, this.fq(value, exclude), this.domain);
+    if (!this.aggregate || !(index = this.manager.findParameters(this.fqName, this.fqRegExp)).length)
+      return this.manager.addParameter(this.fqName, this.fqValue(value, exclude), this.domain);
       
     // No we can obtain the parameter for aggregation.
     var param = this.manager.getParameter(this.fqName, index[0]),
-        parsed = Solr.parseFacet(param.value),
+        parsed = this.fqParse(param.value),
         added = false;
     
     if (!Array.isArray(value))
       value = [value];
     for (var v, i = 0, vl = value.length; i < vl; ++i) {
       v = value[i];
-      if (parsed.value == v)
+      if (parsed == v)
         continue;
-      else if (Array.isArray(parsed.value) && parsed.value.indexOf(v) >= 0)
+      else if (Array.isArray(parsed) && parsed.indexOf(v) >= 0)
         continue;
         
-      if (typeof parsed.value === 'string')
-        parsed.value = [ parsed.value ];
-      parsed.value.push(v);
+      if (typeof parsed === 'string')
+        parsed = [ parsed ];
+      parsed.push(v);
       added = true;
     }
     
     if (!added)
       return false;
     
-    param.value = this.fq(parsed.value, exclude);
+    param.value = this.fqValue(parsed, exclude);
     return true;
   },
   
@@ -197,25 +187,25 @@ Solr.Faceting.prototype = {
           removed = false;
 
       this.manager.removeParameters(this.fqName, function (p) {
-        var parse, rr;
+        var parsed, rr;
 
-        if (!p.value.match(self.fieldRegExp))
+        if (!p.value.match(self.fqRegExp))
           return false;
         else if (!self.aggregate) {
           removed = removed || (rr = p.value.indexOf(Solr.facetValue(value)) >= 0);
           return rr;
         }
         
-        parse = Solr.parseFacet(p.value);
+        parsed = self.fqParse(p.value);
         if (!Array.isArray(value))
           value = [ value ];
           
-        if (!Array.isArray(parse.value)) {
-          removed = removed || (rr = value.indexOf(parse.value) >= 0);
+        if (!Array.isArray(parsed)) {
+          removed = removed || (rr = value.indexOf(parsed) >= 0);
           return rr;
         }
           
-        parse.value = parse.value.filter(function (v){
+        parsed = parsed.filter(function (v){
           if (value.indexOf(v) == -1)
             return true;
           else {
@@ -224,12 +214,12 @@ Solr.Faceting.prototype = {
           }
         });
         
-        if (!parse.value.length)
+        if (!parsed.length)
           return true;
-        else if (parse.value.length == 1)
-          parse.value = parse.value[0];
+        else if (parsed.length == 1)
+          parsed = parsed[0];
           
-        p.value = self.fq(parse.value);
+        p.value = self.fqValue(parsed);
         return false;
       });
       
@@ -243,12 +233,12 @@ Solr.Faceting.prototype = {
    * @returns {Boolean} If the given value can be found
    */      
   hasValue: function (value) {
-    var indices = this.manager.findParameters(this.fqName, this.fieldRegExp),
+    var indices = this.manager.findParameters(this.fqName, this.fqRegExp),
         value = Solr.escapeValue(value);
         
     for (var p, i = 0, il = indices.length; i < il; ++i) {
       p = this.manager.getParameter(this.fqName, indices[i]);
-      if (p.value.replace(this.fieldRegExp, "").indexOf(value) > -1)
+      if (p.value.replace(this.fqRegExp, "").indexOf(value) > -1)
         return true;
     }
     
@@ -261,7 +251,7 @@ Solr.Faceting.prototype = {
    * @returns {Boolean} Whether a filter query was removed.
    */
   clearValues: function () {
-    return this.manager.removeParameters(this.fqName, this.fieldRegExp);
+    return this.manager.removeParameters(this.fqName, this.fqRegExp);
   },
   
   /**
@@ -278,7 +268,7 @@ Solr.Faceting.prototype = {
       facet_counts = this.manager.response.facet_counts;
       
     if (this.useJson === true)
-      return facet_counts[this.id].buckets;
+      return facet_counts.count > 0 ? facet_counts[this.id].buckets : [];
     else if (this.facet.field !== undefined)
       property = 'facet_fields';
     else if (this.facet.date !== undefined)
@@ -353,50 +343,22 @@ Solr.Faceting.prototype = {
     return counts;
   },
   
-  /** A Wrapped for consolidating the request making.
-    */
-  doRequest: function () {
-    this.manager.addParameter('start', 0);
-    this.manager.doRequest();
-  },
-  
-  /**
-   * @param {String} value The value.
-   * @returns {Function} Sends a request to Solr if it successfully adds a
-   *   filter query with the given value.
-   */
-  clickHandler: function (value) {
-    var self = this;
-    return function (e) {
-      if (self.addValue(value))
-        self.doRequest();
-        
-      return false;
-    };
-  },
-
-  /**
-   * @param {String} value The value.
-   * @returns {Function} Sends a request to Solr if it successfully removes a
-   *   filter query with the given value.
-   */
-  unclickHandler: function (value) {
-    var self = this;
-    return function (e) {
-      if (self.removeValue(value)) 
-        self.doRequest();
-        
-      return false;
-    };
-  },
    /**
-   * @param {String} value The facet value.
+   * @param {String|Object} value The facet value.
    * @param {Boolean} exclude Whether to exclude this fq parameter value.
    * @returns {String} An fq parameter value.
    */
-  fq: function (value, exclude) {
+  fqValue: function (value, exclude) {
     return (exclude ? '-' : '') + this.field + ':' + Solr.facetValue(value);
-  }
-};
+  },
 
-})(Solr, asSys);
+   /**
+   * @param {String} value The stringified facet value
+   * @returns {Object|String} The value that produced this output
+   */
+  fqParse: function (value) {
+    var m = value.match(this.fqRegExp);
+    return m != null ? Solr.parseFacet(m[1]) : null;
+  }
+
+};

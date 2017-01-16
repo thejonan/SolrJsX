@@ -5,8 +5,6 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-(function (Solr, a$){
-  
 Solr.stringifyDomain = function (param) {
   var prefix = [];
 
@@ -37,7 +35,7 @@ Solr.QueryingURL.prototype = {
     
     // For dismax request handlers, if the q parameter has local params, the
     // q parameter must be set to a non-empty value.
-    return param.value || prefix ? param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || (param.name == 'q' && "*:*"))) : null;
+    return param.value || prefix ? param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || "")) : null;
   },
   
   prepareQuery: function () {
@@ -58,5 +56,3 @@ Solr.QueryingURL.prototype = {
   }
   
 };
-
-})(Solr, asSys);

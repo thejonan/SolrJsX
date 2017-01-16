@@ -172,12 +172,24 @@ describe("SolrJsX:", function () {
         expect(data.facet).toEqual({ "test": { field: "field", type: "terms", mincount: 1, limit: -1 } });
       });
       
-      // TODO: Add add/remove/has tests.
+      it ("Property adds a simple value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        expect(main.getParameter('json.filter')).toEqual([ { name: 'json.filter', value: "field:foo"} ]);
+      });
+      
+      it ("Property overrides a value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        expect(main.getParameter('json.filter')).toEqual([ { name: 'json.filter', value: "field:bar"} ]);
+      });
+  
     });
     
     describe("Faceting with exclusion", function () {
       var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingJson))();
-      var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", useJson: true, exclusion: true });
+      var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", exclusion: true, useJson: true });
       main.resetParameters();
       main.addListeners(facet);
       main.init();
@@ -190,6 +202,139 @@ describe("SolrJsX:", function () {
       // TODO: Add add/remove/has tests.
       
     });
+    
+    describe("Faceting with multi-values and aggregation", function () {
+      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+      var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", multivalue: true, aggregate: true });
+      main.resetParameters();
+      main.addListeners(facet);
+      main.init();
+      
+      it ("Property adds a simple value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:foo"} ]);
+      });
+      
+      it ("Property add more values a value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:(foo bar)"} ]);
+      });
+      
+      it ("Properly removes an added value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        expect(facet.removeValue("foo")).toBeTruthy();
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:bar"} ]);
+      });
+    });
+
+    describe("Patterned faceting with multi-values and aggregation", function () {
+      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+      var facet = new (a$(Solr.Faceting, Solr.Patterning))({ 
+        id: "test", 
+        field: "field", 
+        multivalue: true, 
+        aggregate: true,
+        valuePattern:"-(condition:yes OR -{{v}})"
+      });
+      main.resetParameters();
+      main.addListeners(facet);
+      main.init();
+      
+      it ("Property adds a simple value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR -field:foo)"} ]);
+      });
+      
+      it ("Property add more values a value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR -field:(foo bar))"} ]);
+      });
+
+      it ("Property skips same value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        facet.addValue("foo");
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR -field:(foo bar))"} ]);
+      });
+      
+    });
+    
 	}); // Json faceting
+	
+	describe("Ranging ablities", function () {
+    var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+    var range = new (a$(Solr.Ranging))({ id: "test", field: "field" });
+    main.addListeners(range);
+    main.init();
+    
+    it ("Property adds a simple range", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:[3 TO 4]"}]);
+    });
+    
+    it ("Property adds an excluded range", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ], true);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-field:[3 TO 4]"}]);
+    });
+
+    it ("Property removes a range", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ]);
+      range.addValue([ 1, 5 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:[1 TO 5]"}]);
+    });
+    
+    it ("Adds right open range", function () {
+      main.resetParameters();
+      range.addValue([ 3 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:[3 TO *]"}]);
+    });
+    
+    it ("Adds left open range", function () {
+      main.resetParameters();
+      range.addValue([ null, 4 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:[* TO 4]"}]);
+    });
+    
+	});
+	
+	describe("Patterning ablities", function () {
+    var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+    var range = new (a$(Solr.Ranging, Solr.Patterning))({ id: "test", field: "field", valuePattern:"-(condition:yes OR -{{v}})" });
+    main.addListeners(range);
+    main.init();
+    
+    it ("Property adds a simple range", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR -field:[3 TO 4])"}]);
+    });
+    
+    it ("Property adds an excluded range", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ], true);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR field:[3 TO 4])"}]);
+    });
+
+    it ("Property overrides a value", function () {
+      main.resetParameters();
+      range.addValue([ 3, 4 ]);
+      range.addValue([ 1, 5 ]);
+      expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "-(condition:yes OR -field:[1 TO 5])"}]);
+    });
+    
+	});
+	
 	
 });

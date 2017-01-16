@@ -5,8 +5,6 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-(function (Solr, a$){
-  
 Solr.Paging = function (obj) {
   a$.extend(true, this, obj);
   this.manager = null;
@@ -101,5 +99,3 @@ Solr.Paging.prototype = {
     }
   }
 };
-
-})(Solr, asSys);

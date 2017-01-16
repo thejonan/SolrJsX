@@ -6,7 +6,7 @@
   */
   
 
-(function () {
+(function (a$) {
   // Define this as a main object to put everything in
   Solr = { version: "{{VERSION}}" };
 
@@ -20,8 +20,12 @@ import "QueryingURL";
 import "QueryingJson";
 import "Persistency";
 import "Paging";
+import "Requesting";
+import "Delaying";
+import "Patterning";
 import "Texting";
 import "Faceting";
+import "Ranging";
 
   /** ... and finish with some module / export definition for according platforms
     */
@@ -32,4 +36,4 @@ import "Faceting";
     if ( typeof define === "function" && define.amd )
       define(Solr);
   }
-})();
+})(asSys);

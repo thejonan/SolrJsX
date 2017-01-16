@@ -7,7 +7,6 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-(function (Solr, a$){
 /** This is directly copied from AjaxSolr.
   */  
 Solr.escapeValue = function (value) {
@@ -74,7 +73,7 @@ Solr.Configuring = function (obj) {
 };
 
 var paramIsMultiple = function (name) { 
-  return name.match(/^(?:bf|bq|facet\.date|facet\.date\.other|facet\.date\.include|facet\.field|facet\.pivot|facet\.range|facet\.range\.other|facet\.range\.include|facet\.query|fq|json\.query|json\.filter|group\.field|group\.func|group\.query|pf|qf|stats\.field)$/);
+  return name.match(/^(?:bf|bq|facet\.date|facet\.date\.other|facet\.date\.include|facet\.field|facet\.pivot|facet\.range|facet\.range\.other|facet\.range\.include|facet\.query|fq|fl|json\.query|json\.filter|group\.field|group\.func|group\.query|pf|qf|stats\.field)$/);
 };
 
 Solr.Configuring.prototype = {
@@ -87,7 +86,7 @@ Solr.Configuring.prototype = {
     if (typeof param !== 'object') {
       name = param;
       param = { 'name': param, 'value': value };
-      if (domain !== undefined)
+      if (domain != null)
         param.domain = domain;
     }
     else
@@ -170,12 +169,12 @@ Solr.Configuring.prototype = {
   /** Returns a parameter or an array of parameters with that name
     */
   getParameter: function (name, index) {
-    if (this.parameterStore[name] === undefined) {
-      var param = { 'name': name };
-      this.parameterStore[name] = paramIsMultiple(name) ? [ param ] : param;
-    }
-    
-    return (index == null || !paramIsMultiple(name)) ? this.parameterStore[name] : this.parameterStore[name][index];
+    var multi = paramIsMultiple(name);
+
+    if (this.parameterStore[name] === undefined)
+      return multi && index == null ? [] : { 'name': name };
+    else
+      return (index == null || !multi) ? this.parameterStore[name] : this.parameterStore[name][index];
   },
   
   /** Returns an array of values of all parameters with given name
@@ -209,5 +208,3 @@ Solr.Configuring.prototype = {
     this.parameterStore = {};
   }
 };
-
-})(Solr, asSys);
