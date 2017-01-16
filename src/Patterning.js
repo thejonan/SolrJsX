@@ -7,7 +7,7 @@
     
 Solr.Patterning = function (settings) {
   this.valuePattern = settings && settings.valuePattern || this.valuePattern;
-  var oldRE = this.fqRegExp.toString().replace(/^\/\^?|\/$/g,""),
+  var oldRE = this.fqRegExp.toString().replace(/^\/\^?|\$?\/$/g,""),
       newRE = "^" + 
         a$.escapeRegExp(this.valuePattern.replace(/\{\{!?-\}\}/g, "-?").replace("{{v}}", "__v__"))
           .replace("__v__", oldRE)

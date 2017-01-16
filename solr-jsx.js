@@ -830,7 +830,7 @@ Solr.Delaying.prototype = {
     
 Solr.Patterning = function (settings) {
   this.valuePattern = settings && settings.valuePattern || this.valuePattern;
-  var oldRE = this.fqRegExp.toString().replace(/^\/\^?|\/$/g,""),
+  var oldRE = this.fqRegExp.toString().replace(/^\/\^?|\$?\/$/g,""),
       newRE = "^" + 
         a$.escapeRegExp(this.valuePattern.replace(/\{\{!?-\}\}/g, "-?").replace("{{v}}", "__v__"))
           .replace("__v__", oldRE)
@@ -971,7 +971,7 @@ Solr.facetValue = function (value) {
  * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
  */ 
 Solr.parseFacet = function (value) {
-  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/[^\s"]+|"[^"]+"/g);
+  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/"[^"]+"|[^\s"]+/g);
 
   for (var i = 0, sl = sarr.length; i < sl; ++i)
     sarr[i] = sarr[i].replace(/^"|"$/, "").replace("%0022", '"');
@@ -988,7 +988,7 @@ Solr.Faceting = function (settings) {
   if (!this.multivalue)
     this.aggregate = false;
 
-  this.fqRegExp = new RegExp('^-?' + this.field + ':(.+)');
+  this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)');
 };
 
 Solr.Faceting.prototype = {
@@ -1084,7 +1084,7 @@ Solr.Faceting.prototype = {
       
     // No we can obtain the parameter for aggregation.
     var param = this.manager.getParameter(this.fqName, index[0]),
-        parsed = Solr.parseFacet(param.value.match(this.fqRegExp)[1]),
+        parsed = this.fqParse(param.value),
         added = false;
     
     if (!Array.isArray(value))
@@ -1279,14 +1279,23 @@ Solr.Faceting.prototype = {
   },
   
    /**
-   * @param {String} value The facet value.
+   * @param {String|Object} value The facet value.
    * @param {Boolean} exclude Whether to exclude this fq parameter value.
    * @returns {String} An fq parameter value.
    */
   fqValue: function (value, exclude) {
     return (exclude ? '-' : '') + this.field + ':' + Solr.facetValue(value);
+  },
+
+   /**
+   * @param {String} value The stringified facet value
+   * @returns {Object|String} The value that produced this output
+   */
+  fqParse: function (value) {
+    var m = value.match(this.fqRegExp);
+    return m != null ? Solr.parseFacet(m[1]) : null;
   }
-    
+
 };
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   * Ranging skills - maintenance of appropriate parameters.
