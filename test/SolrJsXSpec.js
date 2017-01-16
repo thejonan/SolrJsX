@@ -222,6 +222,14 @@ describe("SolrJsX:", function () {
         facet.addValue("bar");
         expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:(foo bar)"} ]);
       });
+      
+      it ("Properly removes an added value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        expect(facet.removeValue("foo")).toBeTruthy();
+        expect(main.getParameter('fq')).toEqual([ { name: 'fq', value: "field:bar"} ]);
+      });
     });
 
     describe("Patterned faceting with multi-values and aggregation", function () {

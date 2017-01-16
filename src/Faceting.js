@@ -16,7 +16,7 @@ var FacetParameters = {
     'method': null,
     'enum.cache.minDf': null
   },
-  bracketsRegExp = /\s*\(\s*?|\s*\)\s*$/;
+  bracketsRegExp = /^\s*\(\s*|\s*\)\s*$/g;
 
 /**
   * Forms the string for filtering of the current facet value
@@ -36,7 +36,7 @@ Solr.facetValue = function (value) {
  * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
  */ 
 Solr.parseFacet = function (value) {
-  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/"[^"]+"|[^\s"]+/g);
+  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/"[^\s:\/"]+"|[^\s"]+/g);
 
   for (var i = 0, sl = sarr.length; i < sl; ++i)
     sarr[i] = sarr[i].replace(/^"|"$/, "").replace("%0022", '"');
@@ -187,7 +187,7 @@ Solr.Faceting.prototype = {
           removed = false;
 
       this.manager.removeParameters(this.fqName, function (p) {
-        var parse, rr;
+        var parsed, rr;
 
         if (!p.value.match(self.fqRegExp))
           return false;
@@ -196,16 +196,16 @@ Solr.Faceting.prototype = {
           return rr;
         }
         
-        parse = Solr.parseFacet(p.value);
+        parsed = self.fqParse(p.value);
         if (!Array.isArray(value))
           value = [ value ];
           
-        if (!Array.isArray(parse.value)) {
-          removed = removed || (rr = value.indexOf(parse.value) >= 0);
+        if (!Array.isArray(parsed)) {
+          removed = removed || (rr = value.indexOf(parsed) >= 0);
           return rr;
         }
           
-        parse.value = parse.value.filter(function (v){
+        parsed = parsed.filter(function (v){
           if (value.indexOf(v) == -1)
             return true;
           else {
@@ -214,12 +214,12 @@ Solr.Faceting.prototype = {
           }
         });
         
-        if (!parse.value.length)
+        if (!parsed.length)
           return true;
-        else if (parse.value.length == 1)
-          parse.value = parse.value[0];
+        else if (parsed.length == 1)
+          parsed = parsed[0];
           
-        p.value = self.fqValue(parse.value);
+        p.value = self.fqValue(parsed);
         return false;
       });
       
