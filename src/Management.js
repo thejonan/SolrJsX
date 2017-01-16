@@ -5,8 +5,8 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-Solr.Management = function (obj) {
-  a$.extend(true, this, obj);
+Solr.Management = function (settings) {
+  a$.extend(true, this, settings);
   
   this.listeners = {};  // The set of listeners - based on their 'id'.
   this.response = null;
@@ -14,6 +14,13 @@ Solr.Management = function (obj) {
 
   this.currentRequest = null;
   this.pendingRequest = null;
+  
+  // If username and password are given, a basic authentication is assumed
+  // and proper headers added.
+  if (!!settings && !!settings.solrUsername && !!settings.solrPassword) {
+    var token = btoa(settings.solrUsername + ':' + settings.solrPassword);
+    this.ajaxSettings.headers = { 'Authorization': "Basic " + token };
+  }
 };
 
 Solr.Management.prototype = {
@@ -72,7 +79,7 @@ Solr.Management.prototype = {
     // Now let the Querying skill build the settings.url / data
     settings = a$.extend(settings, self.ajaxSettings, self.prepareQuery());
     settings.url = self.solrUrl + (servlet || self.servlet) + (settings.url || "");
-
+    
     // Prepare the handlers for both error and success.
     settings.error = self.onError;
     settings.success = function (data) {
