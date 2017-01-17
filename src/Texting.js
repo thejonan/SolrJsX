@@ -64,10 +64,13 @@ Solr.Texting.prototype = {
    * @param {String} value The new Solr query.
    * @returns {Function}
    */
-  clickHandler: function (q) {
+  clickHandler: function (jel) {
     var self = this;
     return function () {
-      if (self.set(q))
+      if (!jel)
+        jel = $(this);
+        
+      if (self.set(jel.val()))
         self.doRequest();
 
       return false;

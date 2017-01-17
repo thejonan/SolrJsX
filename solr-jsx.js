@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.12.0" };
+  Solr = { version: "0.13.0" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -933,10 +933,13 @@ Solr.Texting.prototype = {
    * @param {String} value The new Solr query.
    * @returns {Function}
    */
-  clickHandler: function (q) {
+  clickHandler: function (jel) {
     var self = this;
     return function () {
-      if (self.set(q))
+      if (!jel)
+        jel = $(this);
+        
+      if (self.set(jel.val()))
         self.doRequest();
 
       return false;
