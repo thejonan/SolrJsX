@@ -51,20 +51,14 @@ Solr.parseParameter = function (str) {
   return param;
 };
 
-Solr.Configuring = function (obj) {
+Solr.Configuring = function (settings) {
   // Now make some reformating of initial parameters.
-  var self = this,
-      parameters = null;
+  var self = this;
       
-  if (obj != null) {
-    parameters = obj.parameters;
-    delete obj.parameters;  
-  }
-
-  a$.extend(true, this, obj);
-      
+  a$.update(true, self, settings);
+  
   this.resetParameters();
-  a$.each(parameters, function (p, name) {
+  a$.each(settings && settings.parameters, function (p, name) {
     if (typeof p === 'string')
       self.addParameter(Solr.parseParameter(name + '=' + p));
     else

@@ -6,12 +6,8 @@
   */
   
 Solr.Texting = function (settings) {
+  a$.update(true, this, settings);
   this.manager = null;
-  
-  if (settings != null) {
-    this.domain = settings.domain || this.domain;
-    this.customResponse = settings.customResponse;
-  }
 };
 
 Solr.Texting.prototype = {

@@ -46,7 +46,8 @@ Solr.parseFacet = function (value) {
 
 
 Solr.Faceting = function (settings) {
-  a$.extend(true, this, settings);
+  this.id = this.field = null;
+  a$.update(true, this, settings);
   this.manager = null;
   
   // We cannot have aggregattion if we don't have multiple values.

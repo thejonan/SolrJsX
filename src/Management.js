@@ -6,7 +6,7 @@
   */
   
 Solr.Management = function (settings) {
-  a$.extend(true, this, settings);
+  a$.update(true, this, settings);
   
   this.listeners = {};  // The set of listeners - based on their 'id'.
   this.response = null;

@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.11.4" };
+  Solr = { version: "0.11.5" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -21,7 +21,7 @@
   */
   
 Solr.Management = function (settings) {
-  a$.extend(true, this, settings);
+  a$.update(true, this, settings);
   
   this.listeners = {};  // The set of listeners - based on their 'id'.
   this.response = null;
@@ -258,20 +258,14 @@ Solr.parseParameter = function (str) {
   return param;
 };
 
-Solr.Configuring = function (obj) {
+Solr.Configuring = function (settings) {
   // Now make some reformating of initial parameters.
-  var self = this,
-      parameters = null;
+  var self = this;
       
-  if (obj != null) {
-    parameters = obj.parameters;
-    delete obj.parameters;  
-  }
-
-  a$.extend(true, this, obj);
-      
+  a$.update(true, self, settings);
+  
   this.resetParameters();
-  a$.each(parameters, function (p, name) {
+  a$.each(settings && settings.parameters, function (p, name) {
     if (typeof p === 'string')
       self.addParameter(Solr.parseParameter(name + '=' + p));
     else
@@ -456,8 +450,7 @@ Solr.stringifyDomain = function (param) {
   return prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
 };
 
-Solr.QueryingURL = function (obj) {
-  a$.extend(true, this, obj);
+Solr.QueryingURL = function (settings) {
 };
 
 var paramValue = function (value) {
@@ -518,13 +511,14 @@ var paramJsonName = function (name) {
   return m && m[1];
 };
 
-Solr.QueryingJson = function (obj) {
-  this.useBody = true;
-  a$.extend(true, this, obj);
+Solr.QueryingJson = function (settings) {
+  this.useBody = settings && settings.useBody === "false" ? false : true;
 };
 
 Solr.QueryingJson.prototype = {
-  __expects: [ "enumerateParameters" ],  
+  __expects: [ "enumerateParameters" ],
+  useBody: true,
+  
   prepareQuery: function () {
     var url = [ ],
         json = { 'params': {} },
@@ -631,7 +625,8 @@ Solr.Persistency.prototype = {
   */
   
 Solr.Paging = function (obj) {
-  a$.extend(true, this, obj);
+  a$.update(true, this, settings);
+
   this.manager = null;
   this.currentPage = this.totalPages = this.totalEntries = null;
 };
@@ -730,11 +725,8 @@ Solr.Paging.prototype = {
   */
     
 Solr.Requesting = function (settings) {
+  a$.update(true, this, settings);
   this.manager = null;
-  if (!!settings) {
-    this.customResponse = settings.customResponse;
-    this.resetPage = !!settings.resetPage;
-  }
 };
 
 Solr.Requesting.prototype = {
@@ -858,12 +850,8 @@ Solr.Patterning.prototype = {
   */
   
 Solr.Texting = function (settings) {
+  a$.update(true, this, settings);
   this.manager = null;
-  
-  if (settings != null) {
-    this.domain = settings.domain || this.domain;
-    this.customResponse = settings.customResponse;
-  }
 };
 
 Solr.Texting.prototype = {
@@ -979,7 +967,8 @@ Solr.parseFacet = function (value) {
 
 
 Solr.Faceting = function (settings) {
-  a$.extend(true, this, settings);
+  this.id = this.field = null;
+  a$.update(true, this, settings);
   this.manager = null;
   
   // We cannot have aggregattion if we don't have multiple values.
@@ -1322,7 +1311,9 @@ Solr.parseRange = function (value) {
 
 
 Solr.Ranging = function (settings) {
-  a$.extend(true, this, settings);
+  this.field = this.id = null;
+  
+  a$.update(true, this, settings);
   this.manager = null;
   
   this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*[^\\s]+\\s+TO\\s+[^\\s]+\\s*\\]");

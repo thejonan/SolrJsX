@@ -6,7 +6,8 @@
   */
   
 Solr.Paging = function (obj) {
-  a$.extend(true, this, obj);
+  a$.update(true, this, settings);
+
   this.manager = null;
   this.currentPage = this.totalPages = this.totalEntries = null;
 };

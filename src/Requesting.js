@@ -6,11 +6,8 @@
   */
     
 Solr.Requesting = function (settings) {
+  a$.update(true, this, settings);
   this.manager = null;
-  if (!!settings) {
-    this.customResponse = settings.customResponse;
-    this.resetPage = !!settings.resetPage;
-  }
 };
 
 Solr.Requesting.prototype = {

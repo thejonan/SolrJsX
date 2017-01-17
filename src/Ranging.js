@@ -25,7 +25,9 @@ Solr.parseRange = function (value) {
 
 
 Solr.Ranging = function (settings) {
-  a$.extend(true, this, settings);
+  this.field = this.id = null;
+  
+  a$.update(true, this, settings);
   this.manager = null;
   
   this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*[^\\s]+\\s+TO\\s+[^\\s]+\\s*\\]");
