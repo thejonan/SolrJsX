@@ -22,7 +22,8 @@
    * not the facets. Update only itself and the results widget.
    */
   Solr.Widgets.Pager = function(settings) {
-    a$.extend(this, settings);
+    a$.update(true, this, settings);
+    this.target = settings.target;
     this.manager = null;
   }
   

@@ -5,7 +5,7 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-Solr.Paging = function (obj) {
+Solr.Paging = function (settings) {
   a$.update(true, this, settings);
 
   this.manager = null;
