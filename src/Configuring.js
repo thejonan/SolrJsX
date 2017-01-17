@@ -54,6 +54,7 @@ Solr.parseParameter = function (str) {
 Solr.Configuring = function (settings) {
   // Now make some reformating of initial parameters.
   var self = this;
+  this.parameterHistory = [];
       
   a$.extend(true, this, a$.common(settings, this));
   
@@ -191,7 +192,7 @@ Solr.Configuring.prototype = {
     a$.each(this.parameterStore, function (p) {
       if (deep && Array.isArray(p))
         a$.each(p, callback);
-      else
+      else if (p !== undefined)
         callback(p);
     });
   },
@@ -200,5 +201,29 @@ Solr.Configuring.prototype = {
     */
   resetParameters: function () {
     this.parameterStore = {};
+  },
+  
+  /** Saves the current set of parameters and "opens" a new one, 
+    * depending on the argument:
+    *
+    * @param {Boolean|Oblect} copy  If it is an object - uses it directly as a new parameter store,
+    *                               if it is a boolean - determines whether to keep the old one.
+    */
+  pushParametes: function(copy) {
+    this.parameterHistory.push(this.parameterStore);
+    if (typeof copy === "object")
+      this.parameterStore = copy;
+    else if (copy === false)
+      this.parameterStore = {};
+    else
+      this.parameteStore = a$.extend(true, {}, this.parameterStore);
+  },
+  
+  /** Pops the last saved parameters, discarding (and returning) the current one.
+    */
+  popParameters: function () {
+    var ret = this.parameterStore;
+    this.parameterStore = this.parameterHistory.pop();
+    return ret;
   }
 };

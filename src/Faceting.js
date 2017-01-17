@@ -89,9 +89,9 @@ Solr.Faceting.prototype = {
       this.manager.addParameter('json.facet.' + this.id, a$.extend(true, facet, this.facet));
     }
     else {
-    var self = this,
-        fpars = a$.extend({}, FacetParameters),
-        domain = { key: this.id };
+      var self = this,
+          fpars = a$.extend({}, FacetParameters),
+          domain = { key: this.id };
         
       if (exTag != null)
         domain.ex = exTag;
