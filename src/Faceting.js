@@ -36,10 +36,10 @@ Solr.facetValue = function (value) {
  * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
  */ 
 Solr.parseFacet = function (value) {
-  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/"[^\s:\/"]+"|[^\s"]+/g);
+  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/[^\s:\/"]+|"[^"]+"/g)
 
   for (var i = 0, sl = sarr.length; i < sl; ++i)
-    sarr[i] = sarr[i].replace(/^"|"$/, "").replace("%0022", '"');
+    sarr[i] = sarr[i].replace(/^"|"$/g, "").replace("%0022", '"');
   
   return sl > 1 ? sarr : sarr[0];
 };
@@ -235,8 +235,7 @@ Solr.Faceting.prototype = {
    * @returns {Boolean} If the given value can be found
    */      
   hasValue: function (value) {
-    var indices = this.manager.findParameters(this.fqName, this.fqRegExp),
-        value = Solr.escapeValue(value);
+    var indices = this.manager.findParameters(this.fqName, this.fqRegExp);
         
     for (var p, i = 0, il = indices.length; i < il; ++i) {
       p = this.manager.getParameter(this.fqName, indices[i]);
