@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.13.0" };
+  Solr = { version: "0.14.0" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -965,7 +965,8 @@ var FacetParameters = {
     'method': null,
     'enum.cache.minDf': null
   },
-  bracketsRegExp = /^\s*\(\s*|\s*\)\s*$/g;
+  bracketsRegExp = /^\s*\(\s*|\s*\)\s*$/g,
+  statsRegExp = /^([^()]+)\(([^)]+)\)$/g;
 
 /**
   * Forms the string for filtering of the current facet value
@@ -993,6 +994,54 @@ Solr.parseFacet = function (value) {
   return sl > 1 ? sarr : sarr[0];
 };
 
+/** Prepares a Json parameter for initial facet configuration.
+  * @returns {Object} An object with all fields set for adding as appropriate parameter.
+  */
+Solr.facetJson = function (field, stats, exTag) {
+  var facet = { type: "terms", field: field, mincount: 1, limit: -1 };
+  
+  if (!!stats)
+    facet.facet = stats;
+  
+  if (exTag != null)
+    facet.domain = { excludeTags: exTag };
+    
+  return facet;
+};
+
+/** Build and add stats fields for non-Json scenario
+  * TODO: This has never been tested!
+  */
+Solr.facetStats = function (manager, tag, statistics) {
+  domain.stats = tag;
+  manager.addParameter('stats', true);
+  var statLocs = {};
+  
+  // Scan to build the local (domain) parts for each stat    
+  a$.each(statistics, function (stats, key) {
+    var parts = stats.match(statsRegExp);
+        
+    if (!parts)
+      return;
+      
+    var field = parts[2],
+        func = parts[1],
+        loc = statLocs[field];
+        
+    if (loc === undefined) {
+      statLocs[field] = loc = {};
+      loc.tag = tag;
+    }
+    
+    loc[func] = true;
+    loc.key = key; // Attention - this overrides.
+  });
+  
+  // Finally add proper parameters
+  a$.each(statLocs, function (s, f) {
+    manager.addParameter('stats.field', f, s);
+  });
+};
 
 Solr.Faceting = function (settings) {
   this.id = this.field = null;
@@ -1014,6 +1063,7 @@ Solr.Faceting.prototype = {
   useJson: false,         // Whether to use the Json Facet API.
   facet: { },             // A default, empty definition.
   domain: null,           // By default we don't have any domain data for the requests.
+  statistics: null,       // Possibility to add statistics
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
@@ -1029,12 +1079,8 @@ Solr.Faceting.prototype = {
     }
 
     if (this.useJson) {
-      var facet = { type: "terms", field: this.field, mincount: 1, limit: -1 };
-
+      var facet = Solr.facetJson(this.field, this.statistics, exTag);
       this.fqName = "json.filter";
-      if (exTag != null)
-        facet.domain = { excludeTags: exTag };
-  
       this.manager.addParameter('json.facet.' + this.id, a$.extend(true, facet, this.facet));
     }
     else {
@@ -1074,6 +1120,9 @@ Solr.Faceting.prototype = {
       // related per-field parameters to the parameter store.
       else {
         this.facet.field = true;
+        if (!!this.statistics)
+          Solr.facetStats(this.manager, this.id + "_stats" + this.statistics);
+          
         this.manager.addParameter('facet.field', this.field, domain);
       }
       
@@ -1081,6 +1130,7 @@ Solr.Faceting.prototype = {
       a$.each(fpars, function (p, k) { 
         self.manager.addParameter('f.' + self.field + '.facet.' + k, p); 
       });
+      
     }
   },
   
@@ -1415,6 +1465,58 @@ Solr.Ranging.prototype = {
   fqValue: function (value, exclude) {
     return (exclude ? '-' : '') + this.field + ':' + Solr.rangeValue(value);
   }
+};
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+  * Pivoting, i.e. nested faceting skils.
+  *
+  * Author: Ivan Georgiev
+  * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
+  */
+
+Solr.Pivoting = function (settings) {
+  a$.extend(true, this, a$.common(settings, this));
+  this.manager = null;
+  this.facetWidgets = [];
+};
+
+Solr.Pivoting.prototype = {
+  pivot: null,              // If document nesting is present - here are the rules for it.
+  useJson: false,           // Whether to prepare everything with Json-based parameters.
+  
+  /** Make the initial setup of the manager.
+    */
+  init: function (manager) {
+    a$.pass(this, Solr.Pivoting, 'init', manager);
+    
+    this.manager = manager;
+
+    var loc = { stats: this.id + "_stats" };
+    if (this.exclusion)
+      loc.ex = this.id + "_tag";
+
+    this.manager.addParameter('facet.pivot', this.pivotFields.join(","), loc);
+    this.manager.addParameter('stats', true);
+    this.manager.addParameter('stats.field', this.statField, { tag: this.id + "_stats", min: true, max: true });
+    
+    this.topField = this.pivotFields[0];
+    
+    var self = this;
+    a$.each(this.facetFields, function (f, k) {
+      manager.addListeners(f.widget = new (a$(Solr.Faceting))({
+        id: k,
+        field: k,
+        multivalue: self.multivalue,
+        aggregate: self.aggregate,
+        exclusion: self.exclusion,
+        color: f.color
+      }));
+      
+      f.widget.init(manager);
+    });
+    
+    
+  }
+  
 };
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   * Result list tunning and preparation.

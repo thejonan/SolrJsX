@@ -16,7 +16,8 @@ var FacetParameters = {
     'method': null,
     'enum.cache.minDf': null
   },
-  bracketsRegExp = /^\s*\(\s*|\s*\)\s*$/g;
+  bracketsRegExp = /^\s*\(\s*|\s*\)\s*$/g,
+  statsRegExp = /^([^()]+)\(([^)]+)\)$/g;
 
 /**
   * Forms the string for filtering of the current facet value
@@ -44,6 +45,54 @@ Solr.parseFacet = function (value) {
   return sl > 1 ? sarr : sarr[0];
 };
 
+/** Prepares a Json parameter for initial facet configuration.
+  * @returns {Object} An object with all fields set for adding as appropriate parameter.
+  */
+Solr.facetJson = function (field, stats, exTag) {
+  var facet = { type: "terms", field: field, mincount: 1, limit: -1 };
+  
+  if (!!stats)
+    facet.facet = stats;
+  
+  if (exTag != null)
+    facet.domain = { excludeTags: exTag };
+    
+  return facet;
+};
+
+/** Build and add stats fields for non-Json scenario
+  * TODO: This has never been tested!
+  */
+Solr.facetStats = function (manager, tag, statistics) {
+  domain.stats = tag;
+  manager.addParameter('stats', true);
+  var statLocs = {};
+  
+  // Scan to build the local (domain) parts for each stat    
+  a$.each(statistics, function (stats, key) {
+    var parts = stats.match(statsRegExp);
+        
+    if (!parts)
+      return;
+      
+    var field = parts[2],
+        func = parts[1],
+        loc = statLocs[field];
+        
+    if (loc === undefined) {
+      statLocs[field] = loc = {};
+      loc.tag = tag;
+    }
+    
+    loc[func] = true;
+    loc.key = key; // Attention - this overrides.
+  });
+  
+  // Finally add proper parameters
+  a$.each(statLocs, function (s, f) {
+    manager.addParameter('stats.field', f, s);
+  });
+};
 
 Solr.Faceting = function (settings) {
   this.id = this.field = null;
@@ -65,6 +114,7 @@ Solr.Faceting.prototype = {
   useJson: false,         // Whether to use the Json Facet API.
   facet: { },             // A default, empty definition.
   domain: null,           // By default we don't have any domain data for the requests.
+  statistics: null,       // Possibility to add statistics
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
@@ -80,12 +130,8 @@ Solr.Faceting.prototype = {
     }
 
     if (this.useJson) {
-      var facet = { type: "terms", field: this.field, mincount: 1, limit: -1 };
-
+      var facet = Solr.facetJson(this.field, this.statistics, exTag);
       this.fqName = "json.filter";
-      if (exTag != null)
-        facet.domain = { excludeTags: exTag };
-  
       this.manager.addParameter('json.facet.' + this.id, a$.extend(true, facet, this.facet));
     }
     else {
@@ -125,6 +171,9 @@ Solr.Faceting.prototype = {
       // related per-field parameters to the parameter store.
       else {
         this.facet.field = true;
+        if (!!this.statistics)
+          Solr.facetStats(this.manager, this.id + "_stats" + this.statistics);
+          
         this.manager.addParameter('facet.field', this.field, domain);
       }
       
@@ -132,6 +181,7 @@ Solr.Faceting.prototype = {
       a$.each(fpars, function (p, k) { 
         self.manager.addParameter('f.' + self.field + '.facet.' + k, p); 
       });
+      
     }
   },
   
