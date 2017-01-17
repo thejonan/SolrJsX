@@ -27,7 +27,7 @@ Solr.parseRange = function (value) {
 Solr.Ranging = function (settings) {
   this.field = this.id = null;
   
-  a$.update(true, this, settings);
+  a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   
   this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*[^\\s]+\\s+TO\\s+[^\\s]+\\s*\\]");
@@ -38,6 +38,7 @@ Solr.Ranging.prototype = {
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
   domain: null,           // Some local attributes to be added to each parameter.
   useJson: false,         // Whether to use the Json Facet API.
+  domain: null,           // The default, per request local (domain) data.
   
   /** Make the initial setup of the manager.
     */

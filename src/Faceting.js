@@ -47,7 +47,7 @@ Solr.parseFacet = function (value) {
 
 Solr.Faceting = function (settings) {
   this.id = this.field = null;
-  a$.update(true, this, settings);
+  a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   
   // We cannot have aggregattion if we don't have multiple values.
@@ -64,6 +64,7 @@ Solr.Faceting.prototype = {
   domain: null,           // Some local attributes to be added to each parameter
   useJson: false,         // Whether to use the Json Facet API.
   facet: { },             // A default, empty definition.
+  domain: null,           // By default we don't have any domain data for the requests.
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */

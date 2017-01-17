@@ -21,7 +21,7 @@
   */
   
 Solr.Management = function (settings) {
-  a$.update(true, this, settings);
+  a$.extend(true, this, a$.common(settings, this));
   
   this.listeners = {};  // The set of listeners - based on their 'id'.
   this.response = null;
@@ -262,7 +262,7 @@ Solr.Configuring = function (settings) {
   // Now make some reformating of initial parameters.
   var self = this;
       
-  a$.update(true, self, settings);
+  a$.extend(true, this, a$.common(settings, this));
   
   this.resetParameters();
   a$.each(settings && settings.parameters, function (p, name) {
@@ -625,7 +625,7 @@ Solr.Persistency.prototype = {
   */
   
 Solr.Paging = function (settings) {
-  a$.update(true, this, settings);
+  a$.extend(true, this, a$.common(settings, this));
 
   this.manager = null;
   this.currentPage = this.totalPages = this.totalEntries = null;
@@ -725,7 +725,7 @@ Solr.Paging.prototype = {
   */
     
 Solr.Requesting = function (settings) {
-  a$.update(true, this, settings);
+  a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
 };
 
@@ -850,7 +850,7 @@ Solr.Patterning.prototype = {
   */
   
 Solr.Texting = function (settings) {
-  a$.update(true, this, settings);
+  a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
 };
 
@@ -968,7 +968,7 @@ Solr.parseFacet = function (value) {
 
 Solr.Faceting = function (settings) {
   this.id = this.field = null;
-  a$.update(true, this, settings);
+  a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   
   // We cannot have aggregattion if we don't have multiple values.
@@ -985,6 +985,7 @@ Solr.Faceting.prototype = {
   domain: null,           // Some local attributes to be added to each parameter
   useJson: false,         // Whether to use the Json Facet API.
   facet: { },             // A default, empty definition.
+  domain: null,           // By default we don't have any domain data for the requests.
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
@@ -1313,7 +1314,7 @@ Solr.parseRange = function (value) {
 Solr.Ranging = function (settings) {
   this.field = this.id = null;
   
-  a$.update(true, this, settings);
+  a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   
   this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*[^\\s]+\\s+TO\\s+[^\\s]+\\s*\\]");
@@ -1324,6 +1325,7 @@ Solr.Ranging.prototype = {
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
   domain: null,           // Some local attributes to be added to each parameter.
   useJson: false,         // Whether to use the Json Facet API.
+  domain: null,           // The default, per request local (domain) data.
   
   /** Make the initial setup of the manager.
     */

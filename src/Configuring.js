@@ -55,7 +55,7 @@ Solr.Configuring = function (settings) {
   // Now make some reformating of initial parameters.
   var self = this;
       
-  a$.update(true, self, settings);
+  a$.extend(true, this, a$.common(settings, this));
   
   this.resetParameters();
   a$.each(settings && settings.parameters, function (p, name) {
