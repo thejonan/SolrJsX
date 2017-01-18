@@ -896,7 +896,7 @@ Solr.Texting.prototype = {
    * @param {String} q The new Solr query.
    * @returns {Boolean} Whether the selection changed.
    */
-  set: function (q) {
+  setValue: function (q) {
     var before = this.manager.getParameter('q'),
         res = this.manager.addParameter('q', q, this.domain);
         after = this.manager.getParameter('q');
@@ -930,16 +930,16 @@ Solr.Texting.prototype = {
   /**
    * Returns a function to set the main Solr query.
    *
-   * @param {String} value The new Solr query.
+   * @param {Object} src Source that has val() method capable of providing the value.
    * @returns {Function}
    */
-  clickHandler: function (jel) {
+  clickHandler: function (src) {
     var self = this;
     return function () {
-      if (!jel)
-        jel = $(this);
-        
-      if (self.set(jel.val()))
+      if (!el) 
+        el = this;
+      
+      if (self.setValue(typeof el.val === "function" ? el.val() : el.value))
         self.doRequest();
 
       return false;
@@ -1060,6 +1060,7 @@ Solr.Faceting.prototype = {
   aggregate: false,       // If additional values are aggregated in one filter.
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
   domain: null,           // Some local attributes to be added to each parameter
+  nesting: null,          // Wether there is a nesting in the docs - a easier than domain approach.
   useJson: false,         // Whether to use the Json Facet API.
   facet: { },             // A default, empty definition.
   domain: null,           // By default we don't have any domain data for the requests.
@@ -1072,6 +1073,9 @@ Solr.Faceting.prototype = {
     this.manager = manager;
     
     var exTag = null;
+
+    if (!!this.nesting)
+      this.facet.domain = a$.extend(this.facet.domain, { blockChildren: this.nesting } );
 
     if (this.exclusion) {
       this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });
@@ -1477,11 +1481,23 @@ Solr.Pivoting = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   this.facetWidgets = [];
+  
+  /* TODO:
+    - Make it possible to provide either a$(Solr.Faceting) or a$(jT.TagWidget) for handling.
+    - Focus on nested facetting and proper statistics.
+    - User Patterning in order to handle the actual filter building
+    - 
+    - Leave all ranging stuff for CurrentSearchWidget
+    - PivotWidget should handle the actual DOM stuff via TagWidget.
+    - 
+  */
+    
 };
 
 Solr.Pivoting.prototype = {
-  pivot: null,              // If document nesting is present - here are the rules for it.
-  useJson: false,           // Whether to prepare everything with Json-based parameters.
+  pivot: null,                        // If document nesting is present - here are the rules for it.
+  useJson: false,                     // Whether to prepare everything with Json-based parameters.
+  defaultHandler: a$(Solr.Faceting),  // The default handler for all levels
   
   /** Make the initial setup of the manager.
     */

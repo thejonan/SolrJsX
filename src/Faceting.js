@@ -111,6 +111,7 @@ Solr.Faceting.prototype = {
   aggregate: false,       // If additional values are aggregated in one filter.
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
   domain: null,           // Some local attributes to be added to each parameter
+  nesting: null,          // Wether there is a nesting in the docs - a easier than domain approach.
   useJson: false,         // Whether to use the Json Facet API.
   facet: { },             // A default, empty definition.
   domain: null,           // By default we don't have any domain data for the requests.
@@ -123,6 +124,9 @@ Solr.Faceting.prototype = {
     this.manager = manager;
     
     var exTag = null;
+
+    if (!!this.nesting)
+      this.facet.domain = a$.extend(this.facet.domain, { blockChildren: this.nesting } );
 
     if (this.exclusion) {
       this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });

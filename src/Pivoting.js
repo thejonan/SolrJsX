@@ -9,11 +9,23 @@ Solr.Pivoting = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   this.facetWidgets = [];
+  
+  /* TODO:
+    - Make it possible to provide either a$(Solr.Faceting) or a$(jT.TagWidget) for handling.
+    - Focus on nested facetting and proper statistics.
+    - User Patterning in order to handle the actual filter building
+    - 
+    - Leave all ranging stuff for CurrentSearchWidget
+    - PivotWidget should handle the actual DOM stuff via TagWidget.
+    - 
+  */
+    
 };
 
 Solr.Pivoting.prototype = {
-  pivot: null,              // If document nesting is present - here are the rules for it.
-  useJson: false,           // Whether to prepare everything with Json-based parameters.
+  pivot: null,                        // If document nesting is present - here are the rules for it.
+  useJson: false,                     // Whether to prepare everything with Json-based parameters.
+  defaultHandler: a$(Solr.Faceting),  // The default handler for all levels
   
   /** Make the initial setup of the manager.
     */

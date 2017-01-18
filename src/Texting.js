@@ -27,7 +27,7 @@ Solr.Texting.prototype = {
    * @param {String} q The new Solr query.
    * @returns {Boolean} Whether the selection changed.
    */
-  set: function (q) {
+  setValue: function (q) {
     var before = this.manager.getParameter('q'),
         res = this.manager.addParameter('q', q, this.domain);
         after = this.manager.getParameter('q');
@@ -61,16 +61,16 @@ Solr.Texting.prototype = {
   /**
    * Returns a function to set the main Solr query.
    *
-   * @param {String} value The new Solr query.
+   * @param {Object} src Source that has val() method capable of providing the value.
    * @returns {Function}
    */
-  clickHandler: function (jel) {
+  clickHandler: function (src) {
     var self = this;
     return function () {
-      if (!jel)
-        jel = $(this);
-        
-      if (self.set(jel.val()))
+      if (!el) 
+        el = this;
+      
+      if (self.setValue(typeof el.val === "function" ? el.val() : el.value))
         self.doRequest();
 
       return false;
