@@ -1488,20 +1488,10 @@ var DefaultFaceter = a$(Solr.Faceting);
 Solr.Pivoting = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
-  this.faceters = { };
+  this.faceters = [ ];
 
   this.id = settings.id;
   this.settings = settings;
-  
-  /* TODO:
-    - Focus on nested facetting and proper statistics.
-    - User Patterning in order to handle the actual filter building
-    - 
-    - Leave all ranging stuff for CurrentSearchWidget
-    - PivotWidget should handle the actual DOM stuff via TagWidget.
-    - 
-  */
-    
 };
 
 Solr.Pivoting.prototype = {
@@ -1555,28 +1545,61 @@ Solr.Pivoting.prototype = {
         delete f.nesting;
         
       f.statistics = stats;
-      this.faceters[f.id] = w = this.addFaceter(f, i);
+      this.faceters.push(w = this.addFaceter(f, i));
       w.init(manager);
     }
   },
   
-  addValue: function (value, id) {
-    return this.faceters[id].addValue(value);
+  getPivotCounts: function (pivot_counts) {
+    if (pivot_counts == null)
+      pivot_counts = this.manager.response.facet_counts;
+      
+    if (this.useJson === true)
+      return pivot_counts.count > 0 ? pivot_counts[this.faceters[0].id].buckets : [];
+    else
+      throw { error: "Not supported for now!" }; // TODO!!!
   },
   
-  removeValue: function (value, id) {
-    return this.faceters[id].removeValue(value);
+  addValue: function (id, value, exclude) {
+    return this.faceters.find(function (f) { return f.id === id; }).addValue(value, exclude);
   },
   
-  hasValue: function (value, id) {
-    if (!!id)
-      return this.faceters[id].hasValue(value);
-    else for (id in this.faceters)
-      if (this.faceters[id].hasValue(value))
+  removeValue: function (id, value) {
+    return this.faceters.find(function (f) { return f.id === id; }).removeValue(value);
+  },
+  
+  clearValues: function () {
+    a$.each(this.faceters, function (f) { f.clearValues(); });
+  },
+  
+  hasValue: function (id, value) {
+    for (var i = 0, fl = this.faceters.length; i < fl; ++i) {
+      var f = this.faceters[i];
+      if (id != null && f.id !== id)
+        continue;
+      if (f.hasValue(value))
         return true;
+    }
     
     return false;
+  },
+  
+   /**
+   * @param {String} value The stringified facet value
+   * @returns {Object|String} The value that produced this output
+   */
+  fqParse: function (value) {
+    for (var i = 0, fl = this.faceters.length; i < fl; ++i) {
+      var f = this.faceters[i],
+          p = f.fqParse(value);
+          
+      if (p != null)
+        return { id: f.id, value: p };
+    }
+    
+    return null;
   }
+  
 };
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   * Result list tunning and preparation.
