@@ -27,7 +27,7 @@ Solr.Texting.prototype = {
    * @param {String} q The new Solr query.
    * @returns {Boolean} Whether the selection changed.
    */
-  setValue: function (q) {
+  addValue: function (q) {
     var before = this.manager.getParameter('q'),
         res = this.manager.addParameter('q', q, this.domain);
         after = this.manager.getParameter('q');
@@ -44,18 +44,12 @@ Solr.Texting.prototype = {
   },
 
   /**
-   * Returns a function to unset the main Solr query.
+   * Sets the main Solr query to the empty string.
    *
-   * @returns {Function}
+   * @returns {Boolean} Whether the selection changed.
    */
-  unclickHandler: function () {
-    var self = this;
-    return function () {
-      if (self.clear())
-        self.doRequest();
-
-      return false;
-    }
+  removeValue: function () {
+    this.clear();
   },
 
   /**
@@ -70,7 +64,7 @@ Solr.Texting.prototype = {
       if (!el) 
         el = this;
       
-      if (self.setValue(typeof el.val === "function" ? el.val() : el.value))
+      if (self.addValue(typeof el.val === "function" ? el.val() : el.value))
         self.doRequest();
 
       return false;

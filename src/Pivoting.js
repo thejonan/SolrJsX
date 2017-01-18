@@ -10,10 +10,11 @@ var DefaultFaceter = a$(Solr.Faceting);
 Solr.Pivoting = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
-  this.faceters = [ ];
+  this.faceters = { };
 
   this.id = settings.id;
   this.settings = settings;
+  this.rootId = null;
 };
 
 Solr.Pivoting.prototype = {
@@ -55,21 +56,27 @@ Solr.Pivoting.prototype = {
     var location = "json";
     for (var i = 0, pl = this.pivot.length; i < pl; ++i) {
       var p = this.pivot[i],
-          f = a$.extend(true, { }, this.settings, typeof p === "string" ? { id: p, field: p, disabled: true } : p),
-          w;
+          f = a$.extend(true, { }, this.settings, typeof p === "string" ? { id: p, field: p, disabled: true } : p);
       
       location += ".facet." + f.id;
       if (this.useJson)
         f.jsonLocation = location;
+      if (this.rootId == null)
+        this.rootId = f.id;
       
       // We usually don't need nesting on the inner levels.
       if (p.nesting == null && i > 0)
         delete f.nesting;
         
       f.statistics = stats;
-      this.faceters.push(w = this.addFaceter(f, i));
-      w.init(manager);
+        
+      (this.faceters[f.id] = this.addFaceter(f, i)).init(manager);
     }
+  },
+  
+  getPivotEntry: function (idx) {
+    var p = this.pivot[idx];
+    return this.faceters[typeof p === "string" ? p : p.id];  
   },
   
   getPivotCounts: function (pivot_counts) {
@@ -77,31 +84,29 @@ Solr.Pivoting.prototype = {
       pivot_counts = this.manager.response.facet_counts;
       
     if (this.useJson === true)
-      return pivot_counts.count > 0 ? pivot_counts[this.faceters[0].id].buckets : [];
+      return pivot_counts.count > 0 ? pivot_counts[this.rootId].buckets : [];
     else
       throw { error: "Not supported for now!" }; // TODO!!!
   },
   
-  addValue: function (id, value, exclude) {
-    return this.faceters.find(function (f) { return f.id === id; }).addValue(value, exclude);
+  addValue: function (value, id, exclude) {
+    return this.faceters[id].addValue(value, exclude);
   },
   
-  removeValue: function (id, value) {
-    return this.faceters.find(function (f) { return f.id === id; }).removeValue(value);
+  removeValue: function (value, id) {
+    return this.faceters[id].removeValue(value);
   },
   
   clearValues: function () {
     a$.each(this.faceters, function (f) { f.clearValues(); });
   },
   
-  hasValue: function (id, value) {
-    for (var i = 0, fl = this.faceters.length; i < fl; ++i) {
-      var f = this.faceters[i];
-      if (id != null && f.id !== id)
-        continue;
-      if (f.hasValue(value))
+  hasValue: function (value, id) {
+    if (id != null)
+      return this.faceters[id].hasValue(value);
+    else for (id in this.faceters)
+      if (this.faceters[id].hasValue(value))
         return true;
-    }
     
     return false;
   },
@@ -111,12 +116,12 @@ Solr.Pivoting.prototype = {
    * @returns {Object|String} The value that produced this output
    */
   fqParse: function (value) {
-    for (var i = 0, fl = this.faceters.length; i < fl; ++i) {
-      var f = this.faceters[i],
+    for (var id in this.faceters) {
+      var f = this.faceters[id],
           p = f.fqParse(value);
           
       if (p != null)
-        return { id: f.id, value: p };
+        return { id: id, value: p };
     }
     
     return null;
