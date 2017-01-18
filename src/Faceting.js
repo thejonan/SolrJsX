@@ -64,7 +64,6 @@ Solr.facetJson = function (field, stats, exTag) {
   * TODO: This has never been tested!
   */
 Solr.facetStats = function (manager, tag, statistics) {
-  domain.stats = tag;
   manager.addParameter('stats', true);
   var statLocs = {};
   
@@ -102,6 +101,11 @@ Solr.Faceting = function (settings) {
   // We cannot have aggregattion if we don't have multiple values.
   if (!this.multivalue)
     this.aggregate = false;
+    
+  if (!this.jsonLocation)
+    this.jsonLocation = 'json.facet.' + this.id;
+    
+  this.facet = settings && settings.facet || {};
 
   this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)');
 };
@@ -113,7 +117,7 @@ Solr.Faceting.prototype = {
   domain: null,           // Some local attributes to be added to each parameter
   nesting: null,          // Wether there is a nesting in the docs - a easier than domain approach.
   useJson: false,         // Whether to use the Json Facet API.
-  facet: { },             // A default, empty definition.
+  jsonLocation: null,     // Location in Json faceting object to put the parameter to.
   domain: null,           // By default we don't have any domain data for the requests.
   statistics: null,       // Possibility to add statistics
   
@@ -136,11 +140,11 @@ Solr.Faceting.prototype = {
     if (this.useJson) {
       var facet = Solr.facetJson(this.field, this.statistics, exTag);
       this.fqName = "json.filter";
-      this.manager.addParameter('json.facet.' + this.id, a$.extend(true, facet, this.facet));
+      this.manager.addParameter(this.jsonLocation, a$.extend(true, facet, this.facet));
     }
     else {
       var self = this,
-          fpars = a$.extend({}, FacetParameters),
+          fpars = a$.extend(true, {}, FacetParameters),
           domain = { key: this.id };
         
       if (exTag != null)
@@ -175,8 +179,10 @@ Solr.Faceting.prototype = {
       // related per-field parameters to the parameter store.
       else {
         this.facet.field = true;
-        if (!!this.statistics)
-          Solr.facetStats(this.manager, this.id + "_stats" + this.statistics);
+        if (!!this.statistics) {
+          domain.stats = this.id + "_stats";
+          Solr.facetStats(this.manager, domain.stats, this.statistics);
+        }
           
         this.manager.addParameter('facet.field', this.field, domain);
       }

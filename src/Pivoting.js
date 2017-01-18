@@ -5,13 +5,17 @@
   * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
   */
 
+var DefaultFaceter = a$(Solr.Faceting);
+
 Solr.Pivoting = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
-  this.facetWidgets = [];
+  this.faceters = { };
+
+  this.id = settings.id;
+  this.settings = settings;
   
   /* TODO:
-    - Make it possible to provide either a$(Solr.Faceting) or a$(jT.TagWidget) for handling.
     - Focus on nested facetting and proper statistics.
     - User Patterning in order to handle the actual filter building
     - 
@@ -23,9 +27,15 @@ Solr.Pivoting = function (settings) {
 };
 
 Solr.Pivoting.prototype = {
-  pivot: null,                        // If document nesting is present - here are the rules for it.
-  useJson: false,                     // Whether to prepare everything with Json-based parameters.
-  defaultHandler: a$(Solr.Faceting),  // The default handler for all levels
+  pivot: null,          // If document nesting is present - here are the rules for it.
+  useJson: false,       // Whether to prepare everything with Json-based parameters.
+  statistics: null,     // The per-facet statistics that are needed.
+  
+  /** Creates a new faceter for the corresponding level
+    */
+  addFaceter: function (facet, idx) {
+    return new DefaultFaceter(facet);
+  },
   
   /** Make the initial setup of the manager.
     */
@@ -34,31 +44,59 @@ Solr.Pivoting.prototype = {
     
     this.manager = manager;
 
-    var loc = { stats: this.id + "_stats" };
-    if (this.exclusion)
-      loc.ex = this.id + "_tag";
-
-    this.manager.addParameter('facet.pivot', this.pivotFields.join(","), loc);
-    this.manager.addParameter('stats', true);
-    this.manager.addParameter('stats.field', this.statField, { tag: this.id + "_stats", min: true, max: true });
+    var stats = this.statistics;
+    if (!this.useJson) {
+      // TODO: Test this!
+      var loc = { };
+      if (!!stats) {
+        loc.stats = this.id + "_stats";
+        Solr.facetStats(this.manager, loc.stats, stats);
+        
+        // We clear this to avoid later every faceter from using it.
+        stats = null;
+      }
+        
+      if (this.exclusion)
+        loc.ex = this.id + "_tag";
+        
+      this.manager.addParameter('facet.pivot', this.pivot.map(function(f) { return (typeof f === "string") ? f : f.field; }).join(","), loc);
+    }
     
-    this.topField = this.pivotFields[0];
-    
-    var self = this;
-    a$.each(this.facetFields, function (f, k) {
-      manager.addListeners(f.widget = new (a$(Solr.Faceting))({
-        id: k,
-        field: k,
-        multivalue: self.multivalue,
-        aggregate: self.aggregate,
-        exclusion: self.exclusion,
-        color: f.color
-      }));
+    var location = "json";
+    for (var i = 0, pl = this.pivot.length; i < pl; ++i) {
+      var p = this.pivot[i],
+          f = a$.extend(true, { }, this.settings, typeof p === "string" ? { id: p, field: p, disabled: true } : p),
+          w;
       
-      f.widget.init(manager);
-    });
-    
-    
-  }
+      location += ".facet." + f.id;
+      if (this.useJson)
+        f.jsonLocation = location;
+      
+      // We usually don't need nesting on the inner levels.
+      if (p.nesting == null && i > 0)
+        delete f.nesting;
+        
+      f.statistics = stats;
+      this.faceters[f.id] = w = this.addFaceter(f, i);
+      w.init(manager);
+    }
+  },
   
+  addValue: function (value, id) {
+    return this.faceters[id].addValue(value);
+  },
+  
+  removeValue: function (value, id) {
+    return this.faceters[id].removeValue(value);
+  },
+  
+  hasValue: function (value, id) {
+    if (!!id)
+      return this.faceters[id].hasValue(value);
+    else for (id in this.faceters)
+      if (this.faceters[id].hasValue(value))
+        return true;
+    
+    return false;
+  }
 };
