@@ -325,12 +325,16 @@ Solr.Faceting.prototype = {
   getFacetCounts: function (facet_counts) {
     var property;
     
+    if (this.useJson === true) {
+        if (facet_counts == null)
+          facet_counts = this.manager.response.facets;
+      return facet_counts.count > 0 ? facet_counts[this.id].buckets : [];
+    }
+    
     if (facet_counts == null)
       facet_counts = this.manager.response.facet_counts;
-      
-    if (this.useJson === true)
-      return facet_counts.count > 0 ? facet_counts[this.id].buckets : [];
-    else if (this.facet.field !== undefined)
+    
+    if (this.facet.field !== undefined)
       property = 'facet_fields';
     else if (this.facet.date !== undefined)
       property = 'facet_dates';

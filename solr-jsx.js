@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.14.0" };
+  Solr = { version: "0.14.1" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -772,6 +772,23 @@ Solr.Requesting.prototype = {
       this.manager.addParameter('start', 0);
     this.manager.doRequest(self.customResponse);
   },
+
+  /**
+   * @param {String} value The value which should be handled
+   * @param {...} a, b, c, d Some parameter that will be transfered to addValue call
+   * @returns {Function} Sends a request to Solr if it successfully adds a
+   *   filter query with the given value.
+   */
+   updateHandler: function () {
+    var self = this;
+    return function () {
+      var res = self.addValue.apply(self, arguments);
+      if (res)
+        self.doRequest();
+        
+      return res;
+    };
+   },
   
   /**
    * @param {String} value The value which should be handled
@@ -779,10 +796,10 @@ Solr.Requesting.prototype = {
    * @returns {Function} Sends a request to Solr if it successfully adds a
    *   filter query with the given value.
    */
-  clickHandler: function (value, a, b, c, d) {
+  clickHandler: function (value, a, b, c) {
     var self = this;
     return function (e) {
-      if (self.addValue(value, a, b, c, d))
+      if (self.addValue(value, a, b, c))
         self.doRequest();
         
       return false;
@@ -791,14 +808,14 @@ Solr.Requesting.prototype = {
 
   /**
    * @param {String} value The value.
-   * @param {...} a, b, c, d Some parameter that will be transfered to addValue call
+   * @param {...} a, b, c Some parameter that will be transfered to addValue call
    * @returns {Function} Sends a request to Solr if it successfully removes a
    *   filter query with the given value.
    */
-  unclickHandler: function (value, a, b, c, d) {
+  unclickHandler: function (value, a, b, c) {
     var self = this;
     return function (e) {
-      if (self.removeValue(value, a, b, c, d)) 
+      if (self.removeValue(value, a, b, c)) 
         self.doRequest();
         
       return false;
@@ -1270,12 +1287,16 @@ Solr.Faceting.prototype = {
   getFacetCounts: function (facet_counts) {
     var property;
     
+    if (this.useJson === true) {
+        if (facet_counts == null)
+          facet_counts = this.manager.response.facets;
+      return facet_counts.count > 0 ? facet_counts[this.id].buckets : [];
+    }
+    
     if (facet_counts == null)
       facet_counts = this.manager.response.facet_counts;
-      
-    if (this.useJson === true)
-      return facet_counts.count > 0 ? facet_counts[this.id].buckets : [];
-    else if (this.facet.field !== undefined)
+    
+    if (this.facet.field !== undefined)
       property = 'facet_fields';
     else if (this.facet.date !== undefined)
       property = 'facet_dates';
@@ -1423,7 +1444,7 @@ Solr.Ranging.prototype = {
   },
   
   /**
-   * Add a facet filter parameter to the Manager
+   * Add a range filter parameter to the Manager
    *
    * @returns {Boolean} Whether the filter was added.
    */    
@@ -1445,7 +1466,7 @@ Solr.Ranging.prototype = {
   },
   
   /**
-   * Tells whether given value is part of facet filter.
+   * Tells whether given value is part of range filter.
    *
    * @returns {Boolean} If the given value can be found
    */      
@@ -1455,7 +1476,7 @@ Solr.Ranging.prototype = {
   },
   
   /**
-   * Removes all filter queries using the widget's facet field.
+   * Removes all filter queries using the widget's range field.
    *
    * @returns {Boolean} Whether a filter query was removed.
    */
@@ -1464,13 +1485,23 @@ Solr.Ranging.prototype = {
   },
   
    /**
-   * @param {String} value The facet value.
+   * @param {String} value The range value.
    * @param {Boolean} exclude Whether to exclude this fq parameter value.
    * @returns {String} An fq parameter value.
    */
   fqValue: function (value, exclude) {
     return (exclude ? '-' : '') + this.field + ':' + Solr.rangeValue(value);
+  },
+  
+   /**
+   * @param {String} value The range value.
+   * @param {Boolean} exclude Whether to exclude this fq parameter value.
+   * @returns {String} An fq parameter value.
+   */
+  fqParse: function (value) {
+    // TODO:
   }
+  
 };
 /** SolrJsX library - a neXt Solr queries JavaScript library.
   * Pivoting, i.e. nested faceting skils.
@@ -1551,20 +1582,30 @@ Solr.Pivoting.prototype = {
       (this.faceters[f.id] = this.addFaceter(f, i)).init(manager);
     }
   },
-  
+
   getPivotEntry: function (idx) {
+    var p = this.pivot[idx];
+    return p === undefined ? null : (typeof p === "object" ? p : { id: p, field: p });
+  },
+  
+  getFaceterEntry: function (idx) {
     var p = this.pivot[idx];
     return this.faceters[typeof p === "string" ? p : p.id];  
   },
   
   getPivotCounts: function (pivot_counts) {
-    if (pivot_counts == null)
-      pivot_counts = this.manager.response.facet_counts;
+    if (this.useJson === true) {
+      if (pivot_counts == null)
+        pivot_counts = this.manager.response.facets;
       
-    if (this.useJson === true)
       return pivot_counts.count > 0 ? pivot_counts[this.rootId].buckets : [];
-    else
+    }
+    else {
+      if (pivot_counts == null)
+        pivot_counts = this.manager.response.pivot;
+
       throw { error: "Not supported for now!" }; // TODO!!!
+    }
   },
   
   addValue: function (value, exclude) {

@@ -53,7 +53,7 @@ Solr.Ranging.prototype = {
   },
   
   /**
-   * Add a facet filter parameter to the Manager
+   * Add a range filter parameter to the Manager
    *
    * @returns {Boolean} Whether the filter was added.
    */    
@@ -75,7 +75,7 @@ Solr.Ranging.prototype = {
   },
   
   /**
-   * Tells whether given value is part of facet filter.
+   * Tells whether given value is part of range filter.
    *
    * @returns {Boolean} If the given value can be found
    */      
@@ -85,7 +85,7 @@ Solr.Ranging.prototype = {
   },
   
   /**
-   * Removes all filter queries using the widget's facet field.
+   * Removes all filter queries using the widget's range field.
    *
    * @returns {Boolean} Whether a filter query was removed.
    */
@@ -94,11 +94,21 @@ Solr.Ranging.prototype = {
   },
   
    /**
-   * @param {String} value The facet value.
+   * @param {String} value The range value.
    * @param {Boolean} exclude Whether to exclude this fq parameter value.
    * @returns {String} An fq parameter value.
    */
   fqValue: function (value, exclude) {
     return (exclude ? '-' : '') + this.field + ':' + Solr.rangeValue(value);
+  },
+  
+   /**
+   * @param {String} value The range value.
+   * @param {Boolean} exclude Whether to exclude this fq parameter value.
+   * @returns {String} An fq parameter value.
+   */
+  fqParse: function (value) {
+    // TODO:
   }
+  
 };

@@ -28,6 +28,23 @@ Solr.Requesting.prototype = {
       this.manager.addParameter('start', 0);
     this.manager.doRequest(self.customResponse);
   },
+
+  /**
+   * @param {String} value The value which should be handled
+   * @param {...} a, b, c, d Some parameter that will be transfered to addValue call
+   * @returns {Function} Sends a request to Solr if it successfully adds a
+   *   filter query with the given value.
+   */
+   updateHandler: function () {
+    var self = this;
+    return function () {
+      var res = self.addValue.apply(self, arguments);
+      if (res)
+        self.doRequest();
+        
+      return res;
+    };
+   },
   
   /**
    * @param {String} value The value which should be handled
@@ -35,10 +52,10 @@ Solr.Requesting.prototype = {
    * @returns {Function} Sends a request to Solr if it successfully adds a
    *   filter query with the given value.
    */
-  clickHandler: function (value, a, b, c, d) {
+  clickHandler: function (value, a, b, c) {
     var self = this;
     return function (e) {
-      if (self.addValue(value, a, b, c, d))
+      if (self.addValue(value, a, b, c))
         self.doRequest();
         
       return false;
@@ -47,14 +64,14 @@ Solr.Requesting.prototype = {
 
   /**
    * @param {String} value The value.
-   * @param {...} a, b, c, d Some parameter that will be transfered to addValue call
+   * @param {...} a, b, c Some parameter that will be transfered to addValue call
    * @returns {Function} Sends a request to Solr if it successfully removes a
    *   filter query with the given value.
    */
-  unclickHandler: function (value, a, b, c, d) {
+  unclickHandler: function (value, a, b, c) {
     var self = this;
     return function (e) {
-      if (self.removeValue(value, a, b, c, d)) 
+      if (self.removeValue(value, a, b, c)) 
         self.doRequest();
         
       return false;

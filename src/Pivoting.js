@@ -77,20 +77,30 @@ Solr.Pivoting.prototype = {
       (this.faceters[f.id] = this.addFaceter(f, i)).init(manager);
     }
   },
-  
+
   getPivotEntry: function (idx) {
+    var p = this.pivot[idx];
+    return p === undefined ? null : (typeof p === "object" ? p : { id: p, field: p });
+  },
+  
+  getFaceterEntry: function (idx) {
     var p = this.pivot[idx];
     return this.faceters[typeof p === "string" ? p : p.id];  
   },
   
   getPivotCounts: function (pivot_counts) {
-    if (pivot_counts == null)
-      pivot_counts = this.manager.response.facet_counts;
+    if (this.useJson === true) {
+      if (pivot_counts == null)
+        pivot_counts = this.manager.response.facets;
       
-    if (this.useJson === true)
       return pivot_counts.count > 0 ? pivot_counts[this.rootId].buckets : [];
-    else
+    }
+    else {
+      if (pivot_counts == null)
+        pivot_counts = this.manager.response.pivot;
+
       throw { error: "Not supported for now!" }; // TODO!!!
+    }
   },
   
   addValue: function (value, exclude) {
