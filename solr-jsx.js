@@ -1495,6 +1495,7 @@ Solr.Pivoting.prototype = {
   pivot: null,          // If document nesting is present - here are the rules for it.
   useJson: false,       // Whether to prepare everything with Json-based parameters.
   statistics: null,     // The per-facet statistics that are needed.
+  domain: null,         // The default domain for requests
   
   /** Creates a new faceter for the corresponding level
     */
@@ -1537,6 +1538,9 @@ Solr.Pivoting.prototype = {
         f.jsonLocation = location;
       if (this.rootId == null)
         this.rootId = f.id;
+        
+      // TODO: Make these work some day
+      f.exclusion = false;
       
       // We usually don't need nesting on the inner levels.
       if (p.nesting == null && i > 0)
@@ -1563,26 +1567,28 @@ Solr.Pivoting.prototype = {
       throw { error: "Not supported for now!" }; // TODO!!!
   },
   
-  addValue: function (value, id, exclude) {
-    return this.faceters[id].addValue(value, exclude);
+  addValue: function (value, exclude) {
+    var p = this.parseValue(value);
+    return this.faceters[p.id].addValue(p.value, exclude);
   },
   
-  removeValue: function (value, id) {
-    return this.faceters[id].removeValue(value);
+  removeValue: function (value) {
+    var p = this.parseValue(value);
+    return this.faceters[p.id].removeValue(p.value);
   },
   
   clearValues: function () {
     a$.each(this.faceters, function (f) { f.clearValues(); });
   },
   
-  hasValue: function (value, id) {
-    if (id != null)
-      return this.faceters[id].hasValue(value);
-    else for (id in this.faceters)
-      if (this.faceters[id].hasValue(value))
-        return true;
-    
-    return false;
+  hasValue: function (value) {
+    var p = this.parseValue(value);
+    return p.id != null ? this.faceters[p.id].hasValue(p.value) : false;
+  },
+  
+  parseValue: function (value) {
+    var m = value.match(/^(\w+):(.+)$/);
+    return !m || this.faceters[m[1]] === undefined ? { value: value } : { value: m[2], id: m[1] };
   },
   
    /**
@@ -1590,15 +1596,25 @@ Solr.Pivoting.prototype = {
    * @returns {Object|String} The value that produced this output
    */
   fqParse: function (value) {
-    for (var id in this.faceters) {
-      var f = this.faceters[id],
-          p = f.fqParse(value);
-          
-      if (p != null)
-        return { id: id, value: p };
+    var p = this.parseValue(value),
+        v = null;
+        
+    if (p.id != null)
+      v = this.faceters[p.id].fqParse(p.value);
+    else for (var id in this.faceters) {
+      v = this.faceters[id].fqParse(p.value);
+      if (!!v) {
+        p.id = id;
+        break;
+      }
     }
     
-    return null;
+    if (Array.isArray(v))
+      v = v.map(function (one) { return p.id + ":" + one; });
+    else if (v != null)
+      v = p.id + ":" + v;
+
+    return v;
   }
   
 };
