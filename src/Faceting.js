@@ -37,27 +37,20 @@ Solr.facetValue = function (value) {
  * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
  */ 
 Solr.parseFacet = function (value) {
-  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/[^\s:\/"]+|"[^"]+"/g)
+  var old = value.length, 
+      sarr, brackets;
+  
+  value = value.replace(bracketsRegExp, "");
+  brackets = old > value.length;
+
+  sarr = value.replace(/\\"/g, "%0022").match(/[^\s:\/"]+|"[^"]+"/g);
+  if (!brackets && sarr.length > 1) // we can't have multi-values without a brackets here.
+    return null;
 
   for (var i = 0, sl = sarr.length; i < sl; ++i)
     sarr[i] = sarr[i].replace(/^"|"$/g, "").replace("%0022", '"');
   
   return sl > 1 ? sarr : sarr[0];
-};
-
-/** Prepares a Json parameter for initial facet configuration.
-  * @returns {Object} An object with all fields set for adding as appropriate parameter.
-  */
-Solr.facetJson = function (field, stats, exTag) {
-  var facet = { type: "terms", field: field, mincount: 1, limit: -1 };
-  
-  if (!!stats)
-    facet.facet = stats;
-  
-  if (exTag != null)
-    facet.domain = { excludeTags: exTag };
-    
-  return facet;
 };
 
 /** Build and add stats fields for non-Json scenario
@@ -107,7 +100,7 @@ Solr.Faceting = function (settings) {
     
   this.facet = settings && settings.facet || {};
 
-  this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)');
+  this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)$');
 };
 
 Solr.Faceting.prototype = {
@@ -138,7 +131,14 @@ Solr.Faceting.prototype = {
     }
 
     if (this.useJson) {
-      var facet = Solr.facetJson(this.field, this.statistics, exTag);
+      var facet = { type: "terms", field: this.field, mincount: 1, limit: -1 };
+      
+      if (!!this.statistics)
+        facet.facet = this.statistics;
+      
+      if (exTag != null)
+        facet.domain = { excludeTags: exTag };
+        
       this.fqName = "json.filter";
       this.manager.addParameter(this.jsonLocation, a$.extend(true, facet, this.facet));
     }

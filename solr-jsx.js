@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.14.1" };
+  Solr = { version: "0.14.2" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -836,14 +836,14 @@ Solr.Delaying = function (settings) {
 };
 
 Solr.Delaying.prototype = {
-  delayed: false,       // Number of milliseconds to delay the request
+  delayed: 300,       // Number of milliseconds to delay the request
   
   /** Make the actual request obeying the "delayed" settings.
     */
   doRequest: function () {
     var self = this,
         doInvoke = function () {
-          a$.pass(this, Solr.Delaying, "doRequest");
+          a$.pass(self, Solr.Delaying, "doRequest");
           self.delayTimer = null;
         };
     if (this.delayed == null || this.delayed < 10)
@@ -999,27 +999,20 @@ Solr.facetValue = function (value) {
  * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
  */ 
 Solr.parseFacet = function (value) {
-  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/[^\s:\/"]+|"[^"]+"/g)
+  var old = value.length, 
+      sarr, brackets;
+  
+  value = value.replace(bracketsRegExp, "");
+  brackets = old > value.length;
+
+  sarr = value.replace(/\\"/g, "%0022").match(/[^\s:\/"]+|"[^"]+"/g);
+  if (!brackets && sarr.length > 1) // we can't have multi-values without a brackets here.
+    return null;
 
   for (var i = 0, sl = sarr.length; i < sl; ++i)
     sarr[i] = sarr[i].replace(/^"|"$/g, "").replace("%0022", '"');
   
   return sl > 1 ? sarr : sarr[0];
-};
-
-/** Prepares a Json parameter for initial facet configuration.
-  * @returns {Object} An object with all fields set for adding as appropriate parameter.
-  */
-Solr.facetJson = function (field, stats, exTag) {
-  var facet = { type: "terms", field: field, mincount: 1, limit: -1 };
-  
-  if (!!stats)
-    facet.facet = stats;
-  
-  if (exTag != null)
-    facet.domain = { excludeTags: exTag };
-    
-  return facet;
 };
 
 /** Build and add stats fields for non-Json scenario
@@ -1069,7 +1062,7 @@ Solr.Faceting = function (settings) {
     
   this.facet = settings && settings.facet || {};
 
-  this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)');
+  this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)$');
 };
 
 Solr.Faceting.prototype = {
@@ -1100,7 +1093,14 @@ Solr.Faceting.prototype = {
     }
 
     if (this.useJson) {
-      var facet = Solr.facetJson(this.field, this.statistics, exTag);
+      var facet = { type: "terms", field: this.field, mincount: 1, limit: -1 };
+      
+      if (!!this.statistics)
+        facet.facet = this.statistics;
+      
+      if (exTag != null)
+        facet.domain = { excludeTags: exTag };
+        
       this.fqName = "json.filter";
       this.manager.addParameter(this.jsonLocation, a$.extend(true, facet, this.facet));
     }
@@ -1421,7 +1421,10 @@ Solr.Ranging = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   
-  this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*[^\\s]+\\s+TO\\s+[^\\s]+\\s*\\]");
+  this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*([^\\s])+\\s+TO\\s+([^\\s])+\\s*\\]");
+  this.fqName = this.useJson ? "json.filter" : "fq";
+  if (this.exclusion)
+    this.domain = a$.extend(true, this.domain, { tag: this.id + "_tag" });
 };
 
 Solr.Ranging.prototype = {
@@ -1436,11 +1439,6 @@ Solr.Ranging.prototype = {
   init: function (manager) {
     a$.pass(this, Solr.Ranging, "init", manager);
     this.manager = manager;
-    
-    if (this.exclusion)
-      this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });
-
-    this.fqName = this.useJson ? "json.filter" : "fq";
   },
   
   /**
@@ -1499,7 +1497,11 @@ Solr.Ranging.prototype = {
    * @returns {String} An fq parameter value.
    */
   fqParse: function (value) {
-    // TODO:
+    var m = value.match(this.fqRegExp);
+    if (!m)
+      return null;
+    m.shift();
+    return m;
   }
   
 };

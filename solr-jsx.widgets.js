@@ -33,7 +33,8 @@
  */
 Solr.Widgets.Pager = function(settings) {
   a$.extend(true, this, a$.common(settings, this));
-  this.target = settings.target;
+  this.target = $(settings.target);
+  this.id = settings.id;
   this.manager = null;
 }
 
@@ -206,6 +207,7 @@ Solr.Widgets.Pager.prototype = {
 Solr.Widgets.Text = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.target = $(settings.target).find('input').on('change', this.clickHandler());
+  this.id = settings.id;
 };
 
 Solr.Widgets.Text.prototype = {

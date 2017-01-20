@@ -9,6 +9,7 @@
 Solr.Widgets.Text = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.target = $(settings.target).find('input').on('change', this.clickHandler());
+  this.id = settings.id;
 };
 
 Solr.Widgets.Text.prototype = {
