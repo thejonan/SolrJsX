@@ -26,6 +26,8 @@ import "Patterning";
 import "Texting";
 import "Faceting";
 import "Ranging";
+import "Pivoting";
+import "Listing";
 
   /** ... and finish with some module / export definition for according platforms
     */

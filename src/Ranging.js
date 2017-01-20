@@ -25,10 +25,15 @@ Solr.parseRange = function (value) {
 
 
 Solr.Ranging = function (settings) {
-  a$.extend(true, this, settings);
+  this.field = this.id = null;
+  
+  a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   
-  this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*[^\\s]+\\s+TO\\s+[^\\s]+\\s*\\]");
+  this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*([^\\s])+\\s+TO\\s+([^\\s])+\\s*\\]");
+  this.fqName = this.useJson ? "json.filter" : "fq";
+  if (this.exclusion)
+    this.domain = a$.extend(true, this.domain, { tag: this.id + "_tag" });
 };
 
 Solr.Ranging.prototype = {
@@ -36,21 +41,17 @@ Solr.Ranging.prototype = {
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
   domain: null,           // Some local attributes to be added to each parameter.
   useJson: false,         // Whether to use the Json Facet API.
+  domain: null,           // The default, per request local (domain) data.
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager.
     */
   init: function (manager) {
     a$.pass(this, Solr.Ranging, "init", manager);
     this.manager = manager;
-    
-    if (this.exclusion)
-      this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });
-
-    this.fqName = this.useJson ? "json.filter" : "fq";
   },
   
   /**
-   * Add a facet filter parameter to the Manager
+   * Add a range filter parameter to the Manager
    *
    * @returns {Boolean} Whether the filter was added.
    */    
@@ -72,7 +73,7 @@ Solr.Ranging.prototype = {
   },
   
   /**
-   * Tells whether given value is part of facet filter.
+   * Tells whether given value is part of range filter.
    *
    * @returns {Boolean} If the given value can be found
    */      
@@ -82,7 +83,7 @@ Solr.Ranging.prototype = {
   },
   
   /**
-   * Removes all filter queries using the widget's facet field.
+   * Removes all filter queries using the widget's range field.
    *
    * @returns {Boolean} Whether a filter query was removed.
    */
@@ -91,11 +92,25 @@ Solr.Ranging.prototype = {
   },
   
    /**
-   * @param {String} value The facet value.
+   * @param {String} value The range value.
    * @param {Boolean} exclude Whether to exclude this fq parameter value.
    * @returns {String} An fq parameter value.
    */
   fqValue: function (value, exclude) {
     return (exclude ? '-' : '') + this.field + ':' + Solr.rangeValue(value);
+  },
+  
+   /**
+   * @param {String} value The range value.
+   * @param {Boolean} exclude Whether to exclude this fq parameter value.
+   * @returns {String} An fq parameter value.
+   */
+  fqParse: function (value) {
+    var m = value.match(this.fqRegExp);
+    if (!m)
+      return null;
+    m.shift();
+    return m;
   }
+  
 };

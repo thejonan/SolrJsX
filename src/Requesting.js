@@ -6,18 +6,15 @@
   */
     
 Solr.Requesting = function (settings) {
+  a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
-  if (!!settings) {
-    this.customResponse = settings.customResponse;
-    this.resetPage = !!settings.resetPage;
-  }
 };
 
 Solr.Requesting.prototype = {
   resetPage: true,      // Whether to reset to the first page on each requst.
   customResponse: null, // A custom response function, which if present invokes priavte doRequest.
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager.
     */
   init: function (manager) {
     a$.pass(this, Solr.Requesting, "init", manager);
@@ -31,16 +28,34 @@ Solr.Requesting.prototype = {
       this.manager.addParameter('start', 0);
     this.manager.doRequest(self.customResponse);
   },
-  
+
   /**
-   * @param {String} value The value.
+   * @param {String} value The value which should be handled
+   * @param {...} a, b, c, d Some parameter that will be transfered to addValue call
    * @returns {Function} Sends a request to Solr if it successfully adds a
    *   filter query with the given value.
    */
-  clickHandler: function (value) {
+   updateHandler: function () {
+    var self = this;
+    return function () {
+      var res = self.addValue.apply(self, arguments);
+      if (res)
+        self.doRequest();
+        
+      return res;
+    };
+   },
+  
+  /**
+   * @param {String} value The value which should be handled
+   * @param {...} a, b, c, d Some parameter that will be transfered to addValue call
+   * @returns {Function} Sends a request to Solr if it successfully adds a
+   *   filter query with the given value.
+   */
+  clickHandler: function (value, a, b, c) {
     var self = this;
     return function (e) {
-      if (self.addValue(value))
+      if (self.addValue(value, a, b, c))
         self.doRequest();
         
       return false;
@@ -49,13 +64,14 @@ Solr.Requesting.prototype = {
 
   /**
    * @param {String} value The value.
+   * @param {...} a, b, c Some parameter that will be transfered to addValue call
    * @returns {Function} Sends a request to Solr if it successfully removes a
    *   filter query with the given value.
    */
-  unclickHandler: function (value) {
+  unclickHandler: function (value, a, b, c) {
     var self = this;
     return function (e) {
-      if (self.removeValue(value)) 
+      if (self.removeValue(value, a, b, c)) 
         self.doRequest();
         
       return false;

@@ -16,13 +16,14 @@ var paramJsonName = function (name) {
   return m && m[1];
 };
 
-Solr.QueryingJson = function (obj) {
-  this.useBody = true;
-  a$.extend(true, this, obj);
+Solr.QueryingJson = function (settings) {
+  this.useBody = settings && settings.useBody === "false" ? false : true;
 };
 
 Solr.QueryingJson.prototype = {
-  __expects: [ "enumerateParameters" ],  
+  __expects: [ "enumerateParameters" ],
+  useBody: true,
+  
   prepareQuery: function () {
     var url = [ ],
         json = { 'params': {} },

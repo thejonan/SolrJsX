@@ -11,14 +11,14 @@ Solr.Delaying = function (settings) {
 };
 
 Solr.Delaying.prototype = {
-  delayed: false,       // Number of milliseconds to delay the request
+  delayed: 300,       // Number of milliseconds to delay the request
   
   /** Make the actual request obeying the "delayed" settings.
     */
   doRequest: function () {
     var self = this,
         doInvoke = function () {
-          a$.pass(this, Solr.Delaying, "doRequest");
+          a$.pass(self, Solr.Delaying, "doRequest");
           self.delayTimer = null;
         };
     if (this.delayed == null || this.delayed < 10)

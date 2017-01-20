@@ -12,8 +12,7 @@ Solr.stringifyDomain = function (param) {
   return prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
 };
 
-Solr.QueryingURL = function (obj) {
-  a$.extend(true, this, obj);
+Solr.QueryingURL = function (settings) {
 };
 
 var paramValue = function (value) {

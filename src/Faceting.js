@@ -16,7 +16,8 @@ var FacetParameters = {
     'method': null,
     'enum.cache.minDf': null
   },
-  bracketsRegExp = /^\s*\(\s*|\s*\)\s*$/g;
+  bracketsRegExp = /^\s*\(\s*|\s*\)\s*$/g,
+  statsRegExp = /^([^()]+)\(([^)]+)\)$/g;
 
 /**
   * Forms the string for filtering of the current facet value
@@ -36,24 +37,70 @@ Solr.facetValue = function (value) {
  * @returns {Object} { field: {String}, value: {Combined}, exclude: {Boolean} }.
  */ 
 Solr.parseFacet = function (value) {
-  var sarr = value.replace(bracketsRegExp, "").replace(/\\"/g, "%0022").match(/"[^\s:\/"]+"|[^\s"]+/g);
+  var old = value.length, 
+      sarr, brackets;
+  
+  value = value.replace(bracketsRegExp, "");
+  brackets = old > value.length;
+
+  sarr = value.replace(/\\"/g, "%0022").match(/[^\s:\/"]+|"[^"]+"/g);
+  if (!brackets && sarr.length > 1) // we can't have multi-values without a brackets here.
+    return null;
 
   for (var i = 0, sl = sarr.length; i < sl; ++i)
-    sarr[i] = sarr[i].replace(/^"|"$/, "").replace("%0022", '"');
+    sarr[i] = sarr[i].replace(/^"|"$/g, "").replace("%0022", '"');
   
   return sl > 1 ? sarr : sarr[0];
 };
 
+/** Build and add stats fields for non-Json scenario
+  * TODO: This has never been tested!
+  */
+Solr.facetStats = function (manager, tag, statistics) {
+  manager.addParameter('stats', true);
+  var statLocs = {};
+  
+  // Scan to build the local (domain) parts for each stat    
+  a$.each(statistics, function (stats, key) {
+    var parts = stats.match(statsRegExp);
+        
+    if (!parts)
+      return;
+      
+    var field = parts[2],
+        func = parts[1],
+        loc = statLocs[field];
+        
+    if (loc === undefined) {
+      statLocs[field] = loc = {};
+      loc.tag = tag;
+    }
+    
+    loc[func] = true;
+    loc.key = key; // Attention - this overrides.
+  });
+  
+  // Finally add proper parameters
+  a$.each(statLocs, function (s, f) {
+    manager.addParameter('stats.field', f, s);
+  });
+};
 
 Solr.Faceting = function (settings) {
-  a$.extend(true, this, settings);
+  this.id = this.field = null;
+  a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   
   // We cannot have aggregattion if we don't have multiple values.
   if (!this.multivalue)
     this.aggregate = false;
+    
+  if (!this.jsonLocation)
+    this.jsonLocation = 'json.facet.' + this.id;
+    
+  this.facet = settings && settings.facet || {};
 
-  this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)');
+  this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)$');
 };
 
 Solr.Faceting.prototype = {
@@ -61,8 +108,11 @@ Solr.Faceting.prototype = {
   aggregate: false,       // If additional values are aggregated in one filter.
   exclusion: false,       // Whether to exclude THIS field from filtering from itself.
   domain: null,           // Some local attributes to be added to each parameter
+  nesting: null,          // Wether there is a nesting in the docs - a easier than domain approach.
   useJson: false,         // Whether to use the Json Facet API.
-  facet: { },             // A default, empty definition.
+  jsonLocation: null,     // Location in Json faceting object to put the parameter to.
+  domain: null,           // By default we don't have any domain data for the requests.
+  statistics: null,       // Possibility to add statistics
   
   /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
     */
@@ -72,6 +122,9 @@ Solr.Faceting.prototype = {
     
     var exTag = null;
 
+    if (!!this.nesting)
+      this.facet.domain = a$.extend(this.facet.domain, { blockChildren: this.nesting } );
+
     if (this.exclusion) {
       this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });
       exTag = this.id + "_tag";
@@ -79,17 +132,20 @@ Solr.Faceting.prototype = {
 
     if (this.useJson) {
       var facet = { type: "terms", field: this.field, mincount: 1, limit: -1 };
-
-      this.fqName = "json.filter";
+      
+      if (!!this.statistics)
+        facet.facet = this.statistics;
+      
       if (exTag != null)
         facet.domain = { excludeTags: exTag };
-  
-      this.manager.addParameter('json.facet.' + this.id, a$.extend(facet, this.facet));
+        
+      this.fqName = "json.filter";
+      this.manager.addParameter(this.jsonLocation, a$.extend(true, facet, this.facet));
     }
     else {
-    var self = this,
-        fpars = a$.extend({}, FacetParameters),
-        domain = { key: this.id };
+      var self = this,
+          fpars = a$.extend(true, {}, FacetParameters),
+          domain = { key: this.id };
         
       if (exTag != null)
         domain.ex = exTag;
@@ -123,6 +179,11 @@ Solr.Faceting.prototype = {
       // related per-field parameters to the parameter store.
       else {
         this.facet.field = true;
+        if (!!this.statistics) {
+          domain.stats = this.id + "_stats";
+          Solr.facetStats(this.manager, domain.stats, this.statistics);
+        }
+          
         this.manager.addParameter('facet.field', this.field, domain);
       }
       
@@ -130,6 +191,7 @@ Solr.Faceting.prototype = {
       a$.each(fpars, function (p, k) { 
         self.manager.addParameter('f.' + self.field + '.facet.' + k, p); 
       });
+      
     }
   },
   
@@ -233,12 +295,11 @@ Solr.Faceting.prototype = {
    * @returns {Boolean} If the given value can be found
    */      
   hasValue: function (value) {
-    var indices = this.manager.findParameters(this.fqName, this.fqRegExp),
-        value = Solr.escapeValue(value);
+    var indices = this.manager.findParameters(this.fqName, this.fqRegExp);
         
     for (var p, i = 0, il = indices.length; i < il; ++i) {
       p = this.manager.getParameter(this.fqName, indices[i]);
-      if (p.value.replace(this.fqRegExp, "").indexOf(value) > -1)
+      if (this.fqParse(p.value).indexOf(value) > -1)
         return true;
     }
     
@@ -264,12 +325,16 @@ Solr.Faceting.prototype = {
   getFacetCounts: function (facet_counts) {
     var property;
     
+    if (this.useJson === true) {
+        if (facet_counts == null)
+          facet_counts = this.manager.response.facets;
+      return facet_counts.count > 0 ? facet_counts[this.id].buckets : [];
+    }
+    
     if (facet_counts == null)
       facet_counts = this.manager.response.facet_counts;
-      
-    if (this.useJson === true)
-      return facet_counts.count > 0 ? facet_counts[this.id].buckets : [];
-    else if (this.facet.field !== undefined)
+    
+    if (this.facet.field !== undefined)
       property = 'facet_fields';
     else if (this.facet.date !== undefined)
       property = 'facet_dates';

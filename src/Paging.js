@@ -5,19 +5,18 @@
   * Copyright © 2016, IDEAConsult Ltd. All rights reserved.
   */
   
-Solr.Paging = function (obj) {
-  a$.extend(true, this, obj);
+Solr.Paging = function (settings) {
+  a$.extend(true, this, a$.common(settings, this));
+
   this.manager = null;
   this.currentPage = this.totalPages = this.totalEntries = null;
 };
 
 Solr.Paging.prototype = {
   pageSize: 20,           // The default page size
-  multivalue: false,      // If this filter allows multiple values
-  exclusion: false,       // Whether to exclude THIS field from filtering from itself.
   domain: null,
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager
     */
   init: function (manager) {
     this.manager = manager;

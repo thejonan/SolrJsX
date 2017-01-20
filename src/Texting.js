@@ -6,19 +6,15 @@
   */
   
 Solr.Texting = function (settings) {
+  a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
-  
-  if (settings != null) {
-    this.domain = settings.domain || this.domain;
-    this.customResponse = settings.customResponse;
-  }
 };
 
 Solr.Texting.prototype = {
   domain: null,         // Additional attributes to be adde to query parameter.
   customResponse: null, // A custom response function, which if present invokes priavte doRequest.
   
-  /** Make the initial setup of the manager for this faceting skill (field, exclusion, etc.)
+  /** Make the initial setup of the manager.
     */
   init: function (manager) {
     a$.pass(this, Solr.Texting, "init", manager);
@@ -31,7 +27,7 @@ Solr.Texting.prototype = {
    * @param {String} q The new Solr query.
    * @returns {Boolean} Whether the selection changed.
    */
-  set: function (q) {
+  addValue: function (q) {
     var before = this.manager.getParameter('q'),
         res = this.manager.addParameter('q', q, this.domain);
         after = this.manager.getParameter('q');
@@ -48,30 +44,27 @@ Solr.Texting.prototype = {
   },
 
   /**
-   * Returns a function to unset the main Solr query.
+   * Sets the main Solr query to the empty string.
    *
-   * @returns {Function}
+   * @returns {Boolean} Whether the selection changed.
    */
-  unclickHandler: function () {
-    var self = this;
-    return function () {
-      if (self.clear())
-        self.doRequest();
-
-      return false;
-    }
+  removeValue: function () {
+    this.clear();
   },
 
   /**
    * Returns a function to set the main Solr query.
    *
-   * @param {String} value The new Solr query.
+   * @param {Object} src Source that has val() method capable of providing the value.
    * @returns {Function}
    */
-  clickHandler: function (q) {
+  clickHandler: function (src) {
     var self = this;
     return function () {
-      if (self.set(q))
+      if (!el) 
+        el = this;
+      
+      if (self.addValue(typeof el.val === "function" ? el.val() : el.value))
         self.doRequest();
 
       return false;
