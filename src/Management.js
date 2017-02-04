@@ -64,17 +64,20 @@ Solr.Management.prototype = {
       callback = servlet;
       servlet = self.servlet;
     }
-    
-    // Now go to inform the listeners that a request is going to happen and
-    // give them a change to cancel it.
-    a$.each(self.listeners, function (l) {
-      if (a$.act(l, l.beforeRequest, self) === false)
-        cancel = l;
-    })
 
-    if (cancel !== null) {
-      a$.act(cancel, self.onError, "Request cancelled", cancel);
-      return; 
+    // We don't make these calls on private requests    
+    if (typeof callback !== "function") {
+      // Now go to inform the listeners that a request is going to happen and
+      // give them a change to cancel it.
+      a$.each(self.listeners, function (l) {
+        if (a$.act(l, l.beforeRequest, self) === false)
+          cancel = l;
+      })
+  
+      if (cancel !== null) {
+        a$.act(cancel, self.onError, "Request cancelled", cancel);
+        return; 
+      }
     }
     
     // Now let the Querying skill build the settings.url / data
@@ -94,17 +97,19 @@ Solr.Management.prototype = {
   
         // Call this for Querying skills, if it is defined.
         a$.act(self, self.parseResponse, self.response, servlet);  
+      
+        // Time to call the passed on success handler.
+        a$.act(self, self.onSuccess);
       }
-      
-      // Time to call the passed on success handler.
-      a$.act(self, self.onSuccess);
-      
+    };
+    
+    settings.complete = function () {
       // Now deal with pending requests, if such exists.
       // Pay attention that this is _not_ recursion, because
       // We're in the success handler, i.e. - async.
       self.inRequest = false;
       if (self.pendingRequests.length > 0)
-        self.doRequest.apply(self, self.pendingRequests.pop());
+        self.doRequest.apply(self, self.pendingRequests.shift());
     };
     
     // Inform all our skills for the preparation.

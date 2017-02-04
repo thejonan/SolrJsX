@@ -53,18 +53,12 @@ Solr.parseParameter = function (str) {
 
 Solr.Configuring = function (settings) {
   // Now make some reformating of initial parameters.
-  var self = this;
   this.parameterHistory = [];
       
   a$.extend(true, this, a$.common(settings, this));
   
   this.resetParameters();
-  a$.each(settings && settings.parameters, function (p, name) {
-    if (typeof p === 'string')
-      self.addParameter(Solr.parseParameter(name + '=' + p));
-    else
-      self.addParameter(name, p);
-  });
+  this.mergeParameters(settings && settings.parameters);
 };
 
 var paramIsMultiple = function (name) { 
@@ -182,6 +176,18 @@ Solr.Configuring.prototype = {
     return val;
   },
   
+  /** Merge the parameters from the given map into the current ones
+    */
+  mergeParameters: function (parameters) {
+    var self = this;
+    a$.each(parameters, function (p, name) {
+      if (typeof p === 'string')
+        self.addParameter(Solr.parseParameter(name + '=' + p));
+      else
+        self.addParameter(name, p);
+    });
+  },
+  
   /** Iterate over all parameters - including array-based, etc.
     */
   enumerateParameters: function (deep, callback) {
@@ -209,14 +215,14 @@ Solr.Configuring.prototype = {
     * @param {Boolean|Oblect} copy  If it is an object - uses it directly as a new parameter store,
     *                               if it is a boolean - determines whether to keep the old one.
     */
-  pushParametes: function(copy) {
+  pushParameters: function(copy) {
     this.parameterHistory.push(this.parameterStore);
     if (typeof copy === "object")
       this.parameterStore = copy;
     else if (copy === false)
       this.parameterStore = {};
     else
-      this.parameteStore = a$.extend(true, {}, this.parameterStore);
+      this.parameterStore = a$.extend(true, {}, this.parameterStore);
   },
   
   /** Pops the last saved parameters, discarding (and returning) the current one.
