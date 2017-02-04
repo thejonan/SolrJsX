@@ -11,6 +11,8 @@ Solr.Texting = function (settings) {
 };
 
 Solr.Texting.prototype = {
+  __expects: [ "doRequest" ],
+  
   domain: null,         // Additional attributes to be adde to query parameter.
   customResponse: null, // A custom response function, which if present invokes priavte doRequest.
   
@@ -29,7 +31,7 @@ Solr.Texting.prototype = {
    */
   addValue: function (q) {
     var before = this.manager.getParameter('q'),
-        res = this.manager.addParameter('q', q, this.domain);
+        res = this.manager.addParameter('q', q, this.domain),
         after = this.manager.getParameter('q');
     return res && !a$.equal(before, after);
   },

@@ -12,8 +12,8 @@ Solr.Management = function (settings) {
   this.response = null;
   this.error = null;
 
-  this.currentRequest = null;
-  this.pendingRequest = null;
+  this.pendingRequests = [];
+  this.inRequest = false;
   
   // If username and password are given, a basic authentication is assumed
   // and proper headers added.
@@ -50,19 +50,20 @@ Solr.Management.prototype = {
         cancel = null,
         settings = {};
         
+    // Suppress same request before this one is finished processing. We'll
+    // remember that we're being asked and will make _one_ request afterwards.
+    if (this.inRequest) {
+      this.pendingRequests.push(arguments);
+      return;
+    }
+
+    this.inRequest = true;
+    
     // fix the incoming parameters
     if (typeof servlet === "function") {
       callback = servlet;
       servlet = self.servlet;
     }
-    
-    // Suppress same request before this one is finished processing. We'll
-    // remember that we're being asked and will make _one_ request afterwards.
-    if (self.currentRequest != null && self.currentRequest == servlet) {
-      self.pendingRequest = servlet || self.servlet;
-      return;
-    }
-    self.inRequest = true;
     
     // Now go to inform the listeners that a request is going to happen and
     // give them a change to cancel it.
@@ -101,9 +102,9 @@ Solr.Management.prototype = {
       // Now deal with pending requests, if such exists.
       // Pay attention that this is _not_ recursion, because
       // We're in the success handler, i.e. - async.
-      self.currentRequest = null;
-      if (self.pendingRequest)
-        self.doRequest(self.pendingRequest);
+      self.inRequest = false;
+      if (self.pendingRequests.length > 0)
+        self.doRequest.apply(self, self.pendingRequests.pop());
     };
     
     // Inform all our skills for the preparation.
