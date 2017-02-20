@@ -21,6 +21,7 @@ import "QueryingJson";
 import "Persistency";
 import "Paging";
 import "Requesting";
+import "Spying";
 import "Delaying";
 import "Patterning";
 import "Texting";

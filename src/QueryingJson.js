@@ -71,7 +71,7 @@ Solr.QueryingJson.prototype = {
   },
   
   parseQuery: function (response) {
-    if (response.responseHeader.params.json != null) {
+    if (response.responseHeader.params && response.responseHeader.params.json != null) {
       var json = JSON.parse(response.responseHeader.params.json);
       a$.extend(response.responseHeader.params, json, json.params);
       delete response.responseHeader.params.json;
