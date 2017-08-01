@@ -123,7 +123,7 @@ Solr.Faceting.prototype = {
     var exTag = null;
 
     if (!!this.nesting)
-      this.facet.domain = a$.extend(this.facet.domain, { blockChildren: this.nesting } );
+      this.facet.domain = a$.extend({ blockChildren: this.nesting }, this.facet.domain);
 
     if (this.exclusion) {
       this.domain = a$.extend(this.domain, { tag: this.id + "_tag" });
