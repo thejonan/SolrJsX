@@ -12,6 +12,8 @@ Solr.Listing = function (settings) {
 
 Solr.Listing.prototype = {
   nestingRules: null,         // If document nesting is present - here are the rules for it.
+  nestingField: null,         // The default nesting field.
+  nestLevel: null,            // Inform which level needs to be nested into the listing.
   listingFields: [ "*" ],     // The fields that need to be present in the result list.
   
   /** Make the initial setup of the manager.
@@ -19,12 +21,16 @@ Solr.Listing.prototype = {
   init: function (manager) {
     a$.pass(this, Solr.Listing, 'init', manager);
     
-    a$.each(this.nestingRules, function (r, i) {
+    if (this.nestLevel != null) {
+      var level = this.nestingRules[this.nestLevel],
+          chF = level.field || this.nestingField,
+          parF = this.nestingRules[level.parent] && this.nestingRules[level.parent].field || this.nestingField;
+      
       manager.addParameter('fl', 
-        "[child parentFilter=" + r.field + ":" + r.parent 
-        + " childFilter=" + r.field + ":" + i 
-        + " limit=" + r.limit + "]");
-    });
+        "[child parentFilter=" + parF + ":" + level.parent 
+        + " childFilter=" + chF + ":" + this.nestLevel 
+        + " limit=" + level.limit + "]");
+    }
 
     a$.each(this.listingFields, function (f) { manager.addParameter('fl', f)});    
   }

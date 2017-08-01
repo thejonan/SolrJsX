@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.15.1" };
+  Solr = { version: "0.15.2" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -494,6 +494,14 @@ Solr.stringifyDomain = function (param) {
   return prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
 };
 
+Solr.stringifyParameter = function (param) { 
+    var prefix = Solr.stringifyDomain(param);
+    
+    // For dismax request handlers, if the q parameter has local params, the
+    // q parameter must be set to a non-empty value.
+    return param.value || prefix ? param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || "")) : null;
+}
+
 Solr.QueryingURL = function (settings) {
 };
 
@@ -511,20 +519,13 @@ var paramValue = function (value) {
 
 Solr.QueryingURL.prototype = {
   __expects: [ "enumerateParameters" ],
-  prepareParameter: function (param) {
-    var prefix = Solr.stringifyDomain(param);
-    
-    // For dismax request handlers, if the q parameter has local params, the
-    // q parameter must be set to a non-empty value.
-    return param.value || prefix ? param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || "")) : null;
-  },
   
   prepareQuery: function () {
     var query = [],
         self = this;
         
     this.enumerateParameters(function (param) {
-      var p = self.prepareParameter(param);
+      var p = Solr.stringifyParameter(param);
       if (p != null)
         query.push(p);
     });
@@ -568,7 +569,7 @@ Solr.QueryingJson.prototype = {
         json = { 'params': {} },
         paramValue = function (param) {
           if (paramIsUrlOnly(param.name)) {
-            url.push(Solr.QueryingURL.prototype.prepareParameter(param));
+            url.push(Solr.stringifyParameter(param));
             return;
           }
           
@@ -1744,6 +1745,8 @@ Solr.Listing = function (settings) {
 
 Solr.Listing.prototype = {
   nestingRules: null,         // If document nesting is present - here are the rules for it.
+  nestingField: null,         // The default nesting field.
+  nestLevel: null,            // Inform which level needs to be nested into the listing.
   listingFields: [ "*" ],     // The fields that need to be present in the result list.
   
   /** Make the initial setup of the manager.
@@ -1751,12 +1754,16 @@ Solr.Listing.prototype = {
   init: function (manager) {
     a$.pass(this, Solr.Listing, 'init', manager);
     
-    a$.each(this.nestingRules, function (r, i) {
+    if (this.nestLevel != null) {
+      var level = this.nestingRules[this.nestLevel],
+          chF = level.field || this.nestingField,
+          parF = this.nestingRules[level.parent] && this.nestingRules[level.parent].field || this.nestingField;
+      
       manager.addParameter('fl', 
-        "[child parentFilter=" + r.field + ":" + r.parent 
-        + " childFilter=" + r.field + ":" + i 
-        + " limit=" + r.limit + "]");
-    });
+        "[child parentFilter=" + parF + ":" + level.parent 
+        + " childFilter=" + chF + ":" + this.nestLevel 
+        + " limit=" + level.limit + "]");
+    }
 
     a$.each(this.listingFields, function (f) { manager.addParameter('fl', f)});    
   }
