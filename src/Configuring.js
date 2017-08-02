@@ -22,6 +22,10 @@ Solr.escapeValue = function (value) {
   return value;
 };
 
+Solr.escapeField = function (field) {
+  return field.replace(/\s/g, "\\$&");  
+};
+
 /**
 * Parameter specification: https://cwiki.apache.org/confluence/display/solr/Local+Parameters+in+Queries
 */

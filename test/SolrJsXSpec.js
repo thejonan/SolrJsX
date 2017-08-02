@@ -187,6 +187,32 @@ describe("SolrJsX:", function () {
   
     });
     
+    describe("Faceting with space named field", function () {
+      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingJson))();
+      var facet = new (a$(Solr.Faceting))({ id: "test", field: "spaced field", useJson: true });
+      main.resetParameters();
+      main.addListeners(facet);
+      main.init();
+
+      it("Has built proper json configuration", function () {
+        var data = JSON.parse(main.prepareQuery().data);
+        expect(data.facet).toEqual({ "test": { field: "spaced field", type: "terms", mincount: 1, limit: -1 } });
+      });
+      
+      it ("Property adds a simple value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        expect(main.getParameter('json.filter')).toEqual([ { name: 'json.filter', value: "spaced\\ field:foo"} ]);
+      });
+      
+      it ("Property overrides a value", function () {
+        main.resetParameters();
+        facet.addValue("foo");
+        facet.addValue("bar");
+        expect(main.getParameter('json.filter')).toEqual([ { name: 'json.filter', value: "spaced\\ field:bar"} ]);
+      });      
+    });
+    
     describe("Faceting with exclusion", function () {
       var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingJson))();
       var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", exclusion: true, useJson: true });

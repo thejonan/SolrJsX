@@ -100,7 +100,7 @@ Solr.Faceting = function (settings) {
     
   this.facet = settings && settings.facet || {};
 
-  this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)$');
+  this.fqRegExp = new RegExp('^-?' + Solr.escapeField(this.field).replace("\\", "\\\\") + ':([^]+)$');
 };
 
 Solr.Faceting.prototype = {
@@ -189,7 +189,7 @@ Solr.Faceting.prototype = {
       
       fpars = a$.common(this.facet, fpars);
       a$.each(fpars, function (p, k) { 
-        self.manager.addParameter('f.' + self.field + '.facet.' + k, p); 
+        self.manager.addParameter('f.' + Solr.escapeField(self.field) + '.facet.' + k, p); 
       });
       
     }
@@ -414,7 +414,7 @@ Solr.Faceting.prototype = {
    * @returns {String} An fq parameter value.
    */
   fqValue: function (value, exclude) {
-    return (exclude ? '-' : '') + this.field + ':' + Solr.facetValue(value);
+    return (exclude ? '-' : '') + Solr.escapeField(this.field) + ':' + Solr.facetValue(value);
   },
 
    /**

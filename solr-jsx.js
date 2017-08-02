@@ -242,6 +242,10 @@ Solr.escapeValue = function (value) {
   return value;
 };
 
+Solr.escapeField = function (field) {
+  return field.replace(/\s/g, "\\$&");  
+};
+
 /**
 * Parameter specification: https://cwiki.apache.org/confluence/display/solr/Local+Parameters+in+Queries
 */
@@ -503,7 +507,7 @@ Solr.stringifyValue = function (param) {
     return value.toString(); 
   else {
     var str = [];
-    a$.each(value, function (v, k) { str.push(k + ":" + Solr.escapeValue(v)); });
+    a$.each(value, function (v, k) { str.push(Solr.escapeField(k) + ":" + Solr.escapeValue(v)); });
     return str.join(" ");
   }
 };
@@ -1134,7 +1138,7 @@ Solr.Faceting = function (settings) {
     
   this.facet = settings && settings.facet || {};
 
-  this.fqRegExp = new RegExp('^-?' + this.field + ':([^]+)$');
+  this.fqRegExp = new RegExp('^-?' + Solr.escapeField(this.field).replace("\\", "\\\\") + ':([^]+)$');
 };
 
 Solr.Faceting.prototype = {
@@ -1223,7 +1227,7 @@ Solr.Faceting.prototype = {
       
       fpars = a$.common(this.facet, fpars);
       a$.each(fpars, function (p, k) { 
-        self.manager.addParameter('f.' + self.field + '.facet.' + k, p); 
+        self.manager.addParameter('f.' + Solr.escapeField(self.field) + '.facet.' + k, p); 
       });
       
     }
@@ -1448,7 +1452,7 @@ Solr.Faceting.prototype = {
    * @returns {String} An fq parameter value.
    */
   fqValue: function (value, exclude) {
-    return (exclude ? '-' : '') + this.field + ':' + Solr.facetValue(value);
+    return (exclude ? '-' : '') + Solr.escapeField(this.field) + ':' + Solr.facetValue(value);
   },
 
    /**
@@ -1493,7 +1497,7 @@ Solr.Ranging = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   
-  this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*([^\\s])+\\s+TO\\s+([^\\s])+\\s*\\]");
+  this.fqRegExp = new RegExp("^-?" + Solr.escapeField(this.field).replace("\\", "\\\\") + ":\\s*\\[\\s*([^\\s])+\\s+TO\\s+([^\\s])+\\s*\\]");
   this.fqName = this.useJson ? "json.filter" : "fq";
   if (this.exclusion)
     this.domain = a$.extend(true, this.domain, { tag: this.id + "_tag" });
@@ -1560,7 +1564,7 @@ Solr.Ranging.prototype = {
    * @returns {String} An fq parameter value.
    */
   fqValue: function (value, exclude) {
-    return (exclude ? '-' : '') + this.field + ':' + Solr.rangeValue(value);
+    return (exclude ? '-' : '') + Solr.escapeField(this.field) + ':' + Solr.rangeValue(value);
   },
   
    /**
