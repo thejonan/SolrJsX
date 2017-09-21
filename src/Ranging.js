@@ -30,7 +30,7 @@ Solr.Ranging = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
   
-  this.fqRegExp = new RegExp("^-?" + this.field + ":\\s*\\[\\s*([^\\s])+\\s+TO\\s+([^\\s])+\\s*\\]");
+  this.fqRegExp = new RegExp("^-?" + Solr.escapeField(this.field).replace("\\", "\\\\") + ":\\s*\\[\\s*([^\\s])+\\s+TO\\s+([^\\s])+\\s*\\]");
   this.fqName = this.useJson ? "json.filter" : "fq";
   if (this.exclusion)
     this.domain = a$.extend(true, this.domain, { tag: this.id + "_tag" });
@@ -97,7 +97,7 @@ Solr.Ranging.prototype = {
    * @returns {String} An fq parameter value.
    */
   fqValue: function (value, exclude) {
-    return (exclude ? '-' : '') + this.field + ':' + Solr.rangeValue(value);
+    return (exclude ? '-' : '') + Solr.escapeField(this.field) + ':' + Solr.rangeValue(value);
   },
   
    /**

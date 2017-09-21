@@ -1,6 +1,6 @@
 {
   "name": "solr-jsx",
-  "version": "0.15.1",
+  "version": "0.15.3",
   "description": "A lightweight, JavaScript engine for building Solr requests",
   "keywords": [
     "solr",
@@ -54,7 +54,7 @@
     "test": "jasmine-node test && uglifyjs solr-jsx.js -mc --ie8 --keep-fnames -o solr-jsx.min.js && npm run-script widgets",
     
     "widgets": "smash widgets/Base.js > solr-jsx.widgets.js && uglifyjs solr-jsx.widgets.js -mc --ie8 --keep-fnames -o solr-jsx.widgets.min.js",
-    "prepublish": "npm test && chmod a-w solr-jsx.*.js && zip solr-jsx.zip LICENSE solr-jsx.*.js",
-    "postpublish": "VERSION=`node -e 'console.log(require(\"./package.json\").version)'`; git push && git tag -am \"Release $VERSION.\" ${VERSION} && git push --tags"
+    "preinstall": "npm test && chmod a-w solr-jsx.*.js && zip solr-jsx.zip LICENSE solr-jsx.*.js",
+    "prepublishOnly": "VERSION=`node -e 'console.log(require(\"./package.json\").version)'`; git push && git tag -am \"Release $VERSION.\" ${VERSION} && git push --tags"
   }
 }

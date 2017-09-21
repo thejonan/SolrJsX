@@ -12,37 +12,40 @@ Solr.stringifyDomain = function (param) {
   return prefix.length > 0 ? "{!" + prefix.join(" ") + "}" : "";
 };
 
-Solr.QueryingURL = function (settings) {
-};
-
-var paramValue = function (value) {
+Solr.stringifyValue = function (param) {
+  var value = param.value || "";
+    
   if (Array.isArray(value))
     return value.join(",");
   else if (typeof value !== 'object')
     return value.toString(); 
   else {
     var str = [];
-    a$.each(value, function (v, k) { str.push(k + ":" + Solr.escapeValue(v)); });
+    a$.each(value, function (v, k) { str.push(Solr.escapeField(k) + ":" + Solr.escapeValue(v)); });
     return str.join(" ");
   }
-}
+};
 
-Solr.QueryingURL.prototype = {
-  __expects: [ "enumerateParameters" ],
-  prepareParameter: function (param) {
+Solr.stringifyParameter = function (param) { 
     var prefix = Solr.stringifyDomain(param);
     
     // For dismax request handlers, if the q parameter has local params, the
     // q parameter must be set to a non-empty value.
-    return param.value || prefix ? param.name + "=" + encodeURIComponent(prefix + paramValue(param.value || "")) : null;
-  },
+    return param.value || prefix ? param.name + "=" + encodeURIComponent(prefix + Solr.stringifyValue(param)) : null;
+}
+
+Solr.QueryingURL = function (settings) {
+};
+
+Solr.QueryingURL.prototype = {
+  __expects: [ "enumerateParameters" ],
   
   prepareQuery: function () {
     var query = [],
         self = this;
         
     this.enumerateParameters(function (param) {
-      var p = self.prepareParameter(param);
+      var p = Solr.stringifyParameter(param);
       if (p != null)
         query.push(p);
     });

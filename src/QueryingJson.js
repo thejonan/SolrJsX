@@ -29,7 +29,7 @@ Solr.QueryingJson.prototype = {
         json = { 'params': {} },
         paramValue = function (param) {
           if (paramIsUrlOnly(param.name)) {
-            url.push(Solr.QueryingURL.prototype.prepareParameter(param));
+            url.push(Solr.stringifyParameter(param));
             return;
           }
           
