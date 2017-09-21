@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.15.2" };
+  Solr = { version: "0.15.3" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -46,15 +46,8 @@ Solr.Management.prototype = {
   solrUrl: "",          // The bas Solr Url to be used, excluding the servlet.
   servlet: "select",    // Default servlet to be used is "select".
   
-  onError: function (message) { 
-    window.console && console.log && console.log(message); 
-    if( message.status == 401 ){
-      $("<div>HTTP Error"+message.statusCode+" - Unauthorized: Access is denied due to invalid credentials.</div>").dialog();
-    }else{
-      $("<div>HTTP Error: Unable to recieve content</div>").dialog();
-    }
-  },
-  onPrepare: function (ajaxSettings) { },
+  onPrepare: null,
+  onError: null,
   onSuccess: null,
   ajaxSettings: {        // Default settings for the ajax call to the `connector`
     async: true,
@@ -87,27 +80,30 @@ Solr.Management.prototype = {
       servlet = self.servlet;
     }
 
+    // Let the Querying skill build the settings.url / data
+    settings = a$.extend(settings, self.ajaxSettings, self.prepareQuery());
+    settings.url = self.solrUrl + (servlet || self.servlet) + (settings.url || "");
+
     // We don't make these calls on private requests    
     if (typeof callback !== "function") {
       // Now go to inform the listeners that a request is going to happen and
       // give them a change to cancel it.
       a$.each(self.listeners, function (l) {
-        if (a$.act(l, l.beforeRequest, self) === false)
+        if (a$.act(l, l.beforeRequest, self, settings) === false)
           cancel = l;
       })
   
       if (cancel !== null) {
-        a$.act(cancel, self.onError, "Request cancelled", cancel);
+        a$.act(cancel, self.onError, null, "Request cancelled", cancel);
         return; 
       }
     }
-    
-    // Now let the Querying skill build the settings.url / data
-    settings = a$.extend(settings, self.ajaxSettings, self.prepareQuery());
-    settings.url = self.solrUrl + (servlet || self.servlet) + (settings.url || "");
-    
+        
     // Prepare the handlers for both error and success.
-    settings.error = self.onError;
+    settings.error = function (jqXHR, status, message) {
+      a$.each(self.listeners, function (l) { a$.act(l, l.afterFailure, settings, status, message); });
+      a$.act(self, self.onError, jqXHR, status, message);
+    };
     settings.success = function (data) {
       self.response = self.parseQuery(data);
 
@@ -121,7 +117,7 @@ Solr.Management.prototype = {
         a$.act(self, self.parseResponse, self.response, servlet);  
       
         // Time to call the passed on success handler.
-        a$.act(self, self.onSuccess);
+        a$.act(self, self.onSuccess, self.response);
       }
     };
     
