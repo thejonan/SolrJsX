@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.15.3" };
+  Solr = { version: "0.15.4" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -82,8 +82,7 @@ Solr.Management.prototype = {
 
     // Let the Querying skill build the settings.url / data
     settings = a$.extend(settings, self.ajaxSettings, self.prepareQuery());
-    settings.servlet = servlet || self.servlet;
-    settings.url = self.solrUrl + settings.servlet + (settings.url || "");
+    settings.url = self.solrUrl + (servlet || self.servlet) + (settings.url || "");
 
     // We don't make these calls on private requests    
     if (typeof callback !== "function") {

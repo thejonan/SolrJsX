@@ -67,8 +67,7 @@ Solr.Management.prototype = {
 
     // Let the Querying skill build the settings.url / data
     settings = a$.extend(settings, self.ajaxSettings, self.prepareQuery());
-    settings.servlet = servlet || self.servlet;
-    settings.url = self.solrUrl + settings.servlet + (settings.url || "");
+    settings.url = self.solrUrl + (servlet || self.servlet) + (settings.url || "");
 
     // We don't make these calls on private requests    
     if (typeof callback !== "function") {
