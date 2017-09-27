@@ -101,14 +101,19 @@ Solr.Management.prototype = {
         
     // Prepare the handlers for both error and success.
     settings.error = function (jqXHR, status, message) {
-      a$.each(self.listeners, function (l) { a$.act(l, l.afterFailure, jqXHR, settings, self); });
-      a$.act(self, self.onError, jqXHR, settings);
+      if (typeof callback === "function")
+        callback(null, jqXHR);
+      else {
+        a$.each(self.listeners, function (l) { a$.act(l, l.afterFailure, jqXHR, settings, self); });
+        a$.act(self, self.onError, jqXHR, settings);
+      }
     };
+    
     settings.success = function (data, status, jqXHR) {
       self.response = self.parseQuery(data);
 
       if (typeof callback === "function")
-        callback(self.response);
+        callback(self.response, jqXHR);
       else {
         // Now inform all the listeners
         a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self.response, settings, jqXHR, self); });
