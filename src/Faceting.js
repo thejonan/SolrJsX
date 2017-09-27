@@ -307,6 +307,25 @@ Solr.Faceting.prototype = {
   },
   
   /**
+   * Returns all the values - the very same way they were added to the agent.
+   */
+  getValues: function () {
+    var indices = this.manager.findParameters(this.fqName, this.fqRegExp),
+        vals = [];
+        
+    for (var v, p, i = 0, il = indices.length; i < il; ++i) {
+      p = this.manager.getParameter(this.fqName, indices[i]);
+      v = this.fqParse(p.value);
+      if (Array.isArray(v))
+        Array.prototype.push.apply(vals, v);
+      else
+        vals.push(v);
+    }
+    
+    return vals;
+  },
+  
+  /**
    * Removes all filter queries using the widget's facet field.
    *
    * @returns {Boolean} Whether a filter query was removed.

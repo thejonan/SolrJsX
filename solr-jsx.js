@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.15.4" };
+  Solr = { version: "0.15.5" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -1338,6 +1338,25 @@ Solr.Faceting.prototype = {
     }
     
     return false;
+  },
+  
+  /**
+   * Returns all the values - the very same way they were added to the agent.
+   */
+  getValues: function () {
+    var indices = this.manager.findParameters(this.fqName, this.fqRegExp),
+        vals = [];
+        
+    for (var v, p, i = 0, il = indices.length; i < il; ++i) {
+      p = this.manager.getParameter(this.fqName, indices[i]);
+      v = this.fqParse(p.value);
+      if (Array.isArray(v))
+        Array.prototype.push.apply(vals, v);
+      else
+        vals.push(v);
+    }
+    
+    return vals;
   },
   
   /**
