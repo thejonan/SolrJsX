@@ -74,35 +74,35 @@ Solr.Management.prototype = {
       // Now go to inform the listeners that a request is going to happen and
       // give them a change to cancel it.
       a$.each(self.listeners, function (l) {
-        if (a$.act(l, l.beforeRequest, self, settings) === false)
+        if (a$.act(l, l.beforeRequest, settings, self) === false)
           cancel = l;
       })
   
       if (cancel !== null) {
-        a$.act(cancel, self.onError, null, "Request cancelled", cancel);
+        a$.act(cancel, self.onError, null, "Request cancelled", cancel, self);
         return; 
       }
     }
         
     // Prepare the handlers for both error and success.
     settings.error = function (jqXHR, status, message) {
-      a$.each(self.listeners, function (l) { a$.act(l, l.afterFailure, settings, status, message); });
-      a$.act(self, self.onError, jqXHR, status, message);
+      a$.each(self.listeners, function (l) { a$.act(l, l.afterFailure, jqXHR, settings, self); });
+      a$.act(self, self.onError, jqXHR, settings);
     };
-    settings.success = function (data) {
+    settings.success = function (data, status, jqXHR) {
       self.response = self.parseQuery(data);
 
       if (typeof callback === "function")
         callback(self.response);
       else {
         // Now inform all the listeners
-        a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self.response, servlet); });
+        a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self.response, settings, jqXHR, self); });
   
         // Call this for Querying skills, if it is defined.
         a$.act(self, self.parseResponse, self.response, servlet);  
       
         // Time to call the passed on success handler.
-        a$.act(self, self.onSuccess, self.response);
+        a$.act(self, self.onSuccess, self.response, jqXHR, settings);
       }
     };
     

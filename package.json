@@ -1,6 +1,6 @@
 {
   "name": "solr-jsx",
-  "version": "0.15.3",
+  "version": "0.15.5",
   "description": "A lightweight, JavaScript engine for building Solr requests",
   "keywords": [
     "solr",
