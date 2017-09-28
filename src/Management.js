@@ -66,8 +66,11 @@ Solr.Management.prototype = {
     }
 
     // Let the Querying skill build the settings.url / data
+    var urlPrefix = self.serverUrl + (servlet || self.servlet);
     settings = a$.extend(settings, self.ajaxSettings, self.prepareQuery());
-    settings.url = self.serverUrl + (servlet || self.servlet) + (settings.url || "");
+    if (urlPrefix.indexOf('?') > 0 && settings.url && settings.url.startsWith('?'))
+      settings.url = '&' + settings.url.substr(1);
+    settings.url =  urlPrefix + (settings.url || "");
 
     // We don't make these calls on private requests    
     if (typeof callback !== "function") {
