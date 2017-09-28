@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.15.5" };
+  Solr = { version: "0.15.6" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -101,14 +101,19 @@ Solr.Management.prototype = {
         
     // Prepare the handlers for both error and success.
     settings.error = function (jqXHR, status, message) {
-      a$.each(self.listeners, function (l) { a$.act(l, l.afterFailure, jqXHR, settings, self); });
-      a$.act(self, self.onError, jqXHR, settings);
+      if (typeof callback === "function")
+        callback(null, jqXHR);
+      else {
+        a$.each(self.listeners, function (l) { a$.act(l, l.afterFailure, jqXHR, settings, self); });
+        a$.act(self, self.onError, jqXHR, settings);
+      }
     };
+    
     settings.success = function (data, status, jqXHR) {
       self.response = self.parseQuery(data);
 
       if (typeof callback === "function")
-        callback(self.response);
+        callback(self.response, jqXHR);
       else {
         // Now inform all the listeners
         a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self.response, settings, jqXHR, self); });
