@@ -17,8 +17,8 @@ Solr.Management = function (settings) {
   
   // If username and password are given, a basic authentication is assumed
   // and proper headers added.
-  if (!!settings && !!settings.solrUsername && !!settings.solrPassword) {
-    var token = btoa(settings.solrUsername + ':' + settings.solrPassword);
+  if (!!settings && !!settings.username && !!settings.password) {
+    var token = btoa(settings.username + ':' + settings.password);
     this.ajaxSettings.headers = { 'Authorization': "Basic " + token };
   }
 };
@@ -28,7 +28,7 @@ Solr.Management.prototype = {
   /** Parameters that can and are expected to be overriden during initialization
     */
   connector: null,      // The object for making the actual requests - jQuery object works pretty fine.
-  solrUrl: "",          // The bas Solr Url to be used, excluding the servlet.
+  serverUrl: "",        // The bas Solr Url to be used, excluding the servlet.
   servlet: "select",    // Default servlet to be used is "select".
   
   onPrepare: null,
@@ -67,7 +67,7 @@ Solr.Management.prototype = {
 
     // Let the Querying skill build the settings.url / data
     settings = a$.extend(settings, self.ajaxSettings, self.prepareQuery());
-    settings.url = self.solrUrl + (servlet || self.servlet) + (settings.url || "");
+    settings.url = self.serverUrl + (servlet || self.servlet) + (settings.url || "");
 
     // We don't make these calls on private requests    
     if (typeof callback !== "function") {
