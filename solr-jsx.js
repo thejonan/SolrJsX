@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.15.7" };
+  Solr = { version: "0.15.8" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -81,8 +81,11 @@ Solr.Management.prototype = {
     }
 
     // Let the Querying skill build the settings.url / data
+    var urlPrefix = self.serverUrl + (servlet || self.servlet);
     settings = a$.extend(settings, self.ajaxSettings, self.prepareQuery());
-    settings.url = self.serverUrl + (servlet || self.servlet) + (settings.url || "");
+    if (urlPrefix.indexOf('?') > 0 && settings.url && settings.url.startsWith('?'))
+      settings.url = '&' + settings.url.substr(1);
+    settings.url =  urlPrefix + (settings.url || "");
 
     // We don't make these calls on private requests    
     if (typeof callback !== "function") {
