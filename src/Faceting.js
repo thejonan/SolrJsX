@@ -131,7 +131,7 @@ Solr.Faceting.prototype = {
     }
 
     if (this.useJson) {
-      var facet = { type: "terms", field: this.field, mincount: 1, limit: -1 };
+      var facet = { type: "terms", field: this.field, mincount: 1 };
       
       if (!!this.statistics)
         facet.facet = this.statistics;
