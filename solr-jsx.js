@@ -8,7 +8,7 @@
 
 (function (a$) {
   // Define this as a main object to put everything in
-  Solr = { version: "0.15.8" };
+  Solr = { version: "0.15.9" };
 
   // Now import all the actual skills ...
   // ATTENTION: Kepp them in the beginning of the line - this is how smash expects them.
@@ -1092,7 +1092,7 @@ Solr.parseFacet = function (value) {
   for (var i = 0, sl = sarr.length; i < sl; ++i)
     sarr[i] = sarr[i].replace(/^"|"$/g, "").replace("%0022", '"');
   
-  return sl > 1 ? sarr : sarr[0];
+  return sarr;
 };
 
 /** Build and add stats fields for non-Json scenario
@@ -1260,13 +1260,9 @@ Solr.Faceting.prototype = {
       value = [value];
     for (var v, i = 0, vl = value.length; i < vl; ++i) {
       v = value[i];
-      if (parsed == v)
+      if (parsed.indexOf(v) > -1)
         continue;
-      else if (Array.isArray(parsed) && parsed.indexOf(v) >= 0)
-        continue;
-        
-      if (typeof parsed === 'string')
-        parsed = [ parsed ];
+
       parsed.push(v);
       added = true;
     }
@@ -1291,7 +1287,7 @@ Solr.Faceting.prototype = {
           removed = false;
 
       this.manager.removeParameters(this.fqName, function (p) {
-        var parsed, rr;
+        var rr;
 
         if (!p.value.match(self.fqRegExp))
           return false;
@@ -1300,16 +1296,10 @@ Solr.Faceting.prototype = {
           return rr;
         }
         
-        parsed = self.fqParse(p.value);
         if (!Array.isArray(value))
           value = [ value ];
-          
-        if (!Array.isArray(parsed)) {
-          removed = removed || (rr = value.indexOf(parsed) >= 0);
-          return rr;
-        }
-          
-        parsed = parsed.filter(function (v){
+        
+        var parsed = self.fqParse(p.value).filter(function (v){
           if (value.indexOf(v) == -1)
             return true;
           else {
@@ -1355,13 +1345,9 @@ Solr.Faceting.prototype = {
     var indices = this.manager.findParameters(this.fqName, this.fqRegExp),
         vals = [];
         
-    for (var v, p, i = 0, il = indices.length; i < il; ++i) {
+    for (var p, i = 0, il = indices.length; i < il; ++i) {
       p = this.manager.getParameter(this.fqName, indices[i]);
-      v = this.fqParse(p.value);
-      if (Array.isArray(v))
-        Array.prototype.push.apply(vals, v);
-      else
-        vals.push(v);
+      Array.prototype.push.apply(vals, v = this.fqParse(p.value));
     }
     
     return vals;
