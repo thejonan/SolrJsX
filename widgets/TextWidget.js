@@ -16,7 +16,7 @@ Solr.Widgets.Text.prototype = {
   __depends: [ Solr.Texting ],
   __expects: [ "clickHandler "],
 
-  afterRequest: function () {
+  afterSuccess: function () {
     $(this.target).val('');
   }
 };

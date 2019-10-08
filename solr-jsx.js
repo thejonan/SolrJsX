@@ -39,7 +39,7 @@ Solr.Management = function (settings) {
 };
 
 Solr.Management.prototype = {
-  __expects: [ "prepareQuery", "parseQuery" ],
+  __expects: [ "prepareQuery", "parseResponse" ],
   /** Parameters that can and are expected to be overriden during initialization
     */
   connector: null,      // The object for making the actual requests - jQuery object works pretty fine.
@@ -113,13 +113,13 @@ Solr.Management.prototype = {
     };
     
     settings.success = function (data, status, jqXHR) {
-      self.response = self.parseQuery(data);
+      self.response = self.parseResponse(data);
 
       if (typeof callback === "function")
         callback(self.response, jqXHR);
       else {
         // Now inform all the listeners
-        a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self.response, settings, jqXHR, self); });
+        a$.each(self.listeners, function (l) { a$.act(l, l.afterSuccess, self.response, settings, jqXHR, self); });
   
         // Call this for Querying skills, if it is defined.
         a$.act(self, self.parseResponse, self.response, servlet);  
@@ -543,7 +543,7 @@ Solr.QueryingURL.prototype = {
     return { url: '?' + query.join("&") };
   },
   
-  parseQuery: function (response) {
+  parseResponse: function (response) {
     return response;
   }
   
@@ -620,7 +620,7 @@ Solr.QueryingJson.prototype = {
       return { url: '?' + url.join("&"), data: json, contentType: "application/json", type: "POST", method:"POST" };
   },
   
-  parseQuery: function (response) {
+  parseResponse: function (response) {
     if (response.responseHeader.params && response.responseHeader.params.json != null) {
       var json = JSON.parse(response.responseHeader.params.json);
       a$.extend(response.responseHeader.params, json, json.params);
@@ -745,10 +745,10 @@ Solr.Paging.prototype = {
 
   /** We need to set all our internals.
     * NOTE: Don't forget to manually call this activity on the skill
-    * using {@code}a$.pass(this, <inheriting skill>, 'afterRequest');{@code}
+    * using {@code}a$.pass(this, <inheriting skill>, 'afterSuccess');{@code}
     */
     
-  afterRequest: function () {
+  afterSuccess: function () {
     var offset  = parseInt(this.manager.response.responseHeader && this.manager.response.responseHeader.params && this.manager.response.responseHeader.params.start || this.manager.getParameter('start').value || 0);
 
     this.pageSize = parseInt(this.manager.response.responseHeader && this.manager.response.responseHeader.params && this.manager.response.responseHeader.params.rows || this.manager.getParameter('rows').value || this.pageSize);
@@ -779,19 +779,19 @@ Solr.Paging.prototype = {
   * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
   */
     
-Solr.Requesting = function (settings) {
+Solr.Acting = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
 };
 
-Solr.Requesting.prototype = {
+Solr.Acting.prototype = {
   resetPage: true,      // Whether to reset to the first page on each requst.
   customResponse: null, // A custom response function, which if present invokes private doRequest.
   
   /** Make the initial setup of the manager.
     */
   init: function (manager) {
-    a$.pass(this, Solr.Requesting, "init", manager);
+    a$.pass(this, Solr.Acting, "init", manager);
     this.manager = manager;
   },
   

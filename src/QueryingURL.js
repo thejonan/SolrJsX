@@ -53,7 +53,7 @@ Solr.QueryingURL.prototype = {
     return { url: '?' + query.join("&") };
   },
   
-  parseQuery: function (response) {
+  parseResponse: function (response) {
     return response;
   }
   

@@ -172,8 +172,8 @@ Solr.Widgets.Pager.prototype = {
     }
   },
 
-  afterRequest: function () {
-    a$.pass(this, Solr.Widgets.Pager, 'afterRequest');
+  afterSuccess: function () {
+    a$.pass(this, Solr.Widgets.Pager, 'afterSuccess');
 
     $(this.target).empty();
 

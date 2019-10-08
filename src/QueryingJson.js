@@ -70,7 +70,7 @@ Solr.QueryingJson.prototype = {
       return { url: '?' + url.join("&"), data: json, contentType: "application/json", type: "POST", method:"POST" };
   },
   
-  parseQuery: function (response) {
+  parseResponse: function (response) {
     if (response.responseHeader.params && response.responseHeader.params.json != null) {
       var json = JSON.parse(response.responseHeader.params.json);
       a$.extend(response.responseHeader.params, json, json.params);

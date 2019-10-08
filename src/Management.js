@@ -24,7 +24,7 @@ Solr.Management = function (settings) {
 };
 
 Solr.Management.prototype = {
-  __expects: [ "prepareQuery", "parseQuery" ],
+  __expects: [ "prepareQuery", "parseResponse" ],
   /** Parameters that can and are expected to be overriden during initialization
     */
   connector: null,      // The object for making the actual requests - jQuery object works pretty fine.
@@ -98,13 +98,13 @@ Solr.Management.prototype = {
     };
     
     settings.success = function (data, status, jqXHR) {
-      self.response = self.parseQuery(data);
+      self.response = self.parseResponse(data);
 
       if (typeof callback === "function")
         callback(self.response, jqXHR);
       else {
         // Now inform all the listeners
-        a$.each(self.listeners, function (l) { a$.act(l, l.afterRequest, self.response, settings, jqXHR, self); });
+        a$.each(self.listeners, function (l) { a$.act(l, l.afterSuccess, self.response, settings, jqXHR, self); });
   
         // Call this for Querying skills, if it is defined.
         a$.act(self, self.parseResponse, self.response, servlet);  

@@ -5,19 +5,19 @@
   * Copyright © 2017, IDEAConsult Ltd. All rights reserved.
   */
     
-Solr.Requesting = function (settings) {
+Solr.Acting = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.manager = null;
 };
 
-Solr.Requesting.prototype = {
+Solr.Acting.prototype = {
   resetPage: true,      // Whether to reset to the first page on each requst.
   customResponse: null, // A custom response function, which if present invokes private doRequest.
   
   /** Make the initial setup of the manager.
     */
   init: function (manager) {
-    a$.pass(this, Solr.Requesting, "init", manager);
+    a$.pass(this, Solr.Acting, "init", manager);
     this.manager = manager;
   },
   
