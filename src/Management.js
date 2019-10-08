@@ -165,8 +165,8 @@ Solr.Management.prototype = {
   
   /** Remove one listener. Can pass only the id.
     */
-  removeListener: function (listener) {
-    if (typeof listener === "objcet")
+  removeOneListener: function (listener) {
+    if (typeof listener === "object")
       listener = listener.id;
       
     delete this.listeners[listener];
@@ -177,13 +177,13 @@ Solr.Management.prototype = {
     * The selector(listener, manager) is invoked and on `true`
     * the listener is removed.
     */
-  removeManyListeners: function (selector) {
+  removeListeners: function (selector, context) {
     if (typeof selector !== 'function')
       throw { name: "Enumeration error", message: "Attempt to select-remove listeners with non-function 'selector': " + selector };
       
     var self = this;
     a$.each(self.listeners, function (l, id) {
-      if (selector(l, id, self))
+      if (selector.call(context, l, id, self))
         delete self.listeners[id];
     });
     
@@ -197,7 +197,7 @@ Solr.Management.prototype = {
       throw { name: "Enumeration error", message: "Attempt to enumerate listeners with non-function 'selector': " + callback };
       
     a$.each(this.listeners, function (l, id) {
-      callback.call(l, l, id, context);
+      callback.call(context, l, id, self);
     });
   },
   

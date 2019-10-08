@@ -14,7 +14,6 @@ Solr.Texting.prototype = {
   __expects: [ "doRequest" ],
   
   domain: null,         // Additional attributes to be adde to query parameter.
-  customResponse: null, // A custom response function, which if present invokes priavte doRequest.
   escapeNeedle: false,  // Whether to put a backslash before white spaces
   
   /** Make the initial setup of the manager.

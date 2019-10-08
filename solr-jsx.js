@@ -180,8 +180,8 @@ Solr.Management.prototype = {
   
   /** Remove one listener. Can pass only the id.
     */
-  removeListener: function (listener) {
-    if (typeof listener === "objcet")
+  removeOneListener: function (listener) {
+    if (typeof listener === "object")
       listener = listener.id;
       
     delete this.listeners[listener];
@@ -192,13 +192,13 @@ Solr.Management.prototype = {
     * The selector(listener, manager) is invoked and on `true`
     * the listener is removed.
     */
-  removeManyListeners: function (selector) {
+  removeListeners: function (selector, context) {
     if (typeof selector !== 'function')
       throw { name: "Enumeration error", message: "Attempt to select-remove listeners with non-function 'selector': " + selector };
       
     var self = this;
     a$.each(self.listeners, function (l, id) {
-      if (selector(l, id, self))
+      if (selector.call(context, l, id, self))
         delete self.listeners[id];
     });
     
@@ -212,7 +212,7 @@ Solr.Management.prototype = {
       throw { name: "Enumeration error", message: "Attempt to enumerate listeners with non-function 'selector': " + callback };
       
     a$.each(this.listeners, function (l, id) {
-      callback.call(l, l, id, context);
+      callback.call(context, l, id, self);
     });
   },
   
@@ -821,15 +821,16 @@ Solr.Requesting.prototype = {
    },
   
   /**
-   * @param {String} value The value which should be handled
-   * @param {...} a, b, c, d Some parameter that will be transfered to addValue call
+   * @param {...} args All the arguments are directly re-passed to `addValue` call.
    * @returns {Function} Sends a request to Solr if it successfully adds a
    *   filter query with the given value.
    */
-  clickHandler: function (value, a, b, c) {
-    var self = this;
+  clickHandler: function () {
+    var self = this,
+        args = arguments;
+
     return function (e) {
-      if (self.addValue(value, a, b, c))
+      if (self.addValue.apply(self, args))
         self.doRequest();
         
       return false;
@@ -837,15 +838,16 @@ Solr.Requesting.prototype = {
   },
 
   /**
-   * @param {String} value The value.
-   * @param {...} a, b, c Some parameter that will be transfered to addValue call
+   * @param {...} args All the arguments are directly re-passed to `removeValue` call.
    * @returns {Function} Sends a request to Solr if it successfully removes a
    *   filter query with the given value.
    */
-  unclickHandler: function (value, a, b, c) {
-    var self = this;
+  unclickHandler: function () {
+    var self = this,
+        args = arguments;
+
     return function (e) {
-      if (self.removeValue(value, a, b, c)) 
+      if (self.removeValue.apply(self, args)) 
         self.doRequest();
         
       return false;

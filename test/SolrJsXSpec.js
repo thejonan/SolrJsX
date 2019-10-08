@@ -54,14 +54,14 @@ describe("SolrJsX:", function () {
 
     it("Listener can be removed", function () {
       topic.addListeners(aListener);
-      topic.removeListener("a");
+      topic.removeOneListener("a");
       expect(a$.weight(topic.listeners)).toBe(0);
     })
 
     it("Many consumers can be removed", function () {
       topic.addListeners(aListener);
       topic.addListeners({ id: "b" });
-      topic.removeManyListeners(function (c, i) { return i == "a"; });
+      topic.removeListeners(function (c, i) { return i == "a"; });
       expect(a$.weight(topic.listeners)).toBe(1);
       expect(topic.getListener("b")).toBeDefined();
     })
@@ -70,7 +70,7 @@ describe("SolrJsX:", function () {
       topic.addListeners(aListener);
       topic.addListeners({ id: "b" });
       var ctx = { count: 0 };
-      topic.enumerateListeners(function (c, i, context) { ++context.count; }, ctx);
+      topic.enumerateListeners(function () { ++this.count; }, ctx);
       expect(ctx.count).toBe(2);
     });
 	});

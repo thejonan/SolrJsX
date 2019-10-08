@@ -26,12 +26,12 @@ Solr.Requesting.prototype = {
   doRequest: function () {
     if (this.resetPage)
       this.manager.addParameter('start', 0);
+    
     this.manager.doRequest(self.customResponse);
   },
 
   /**
-   * @param {String} value The value which should be handled
-   * @param {...} a, b, c, d Some parameter that will be transfered to addValue call
+   * @param {...} args Some parameter that will be transfered to addValue call
    * @returns {Function} Sends a request to Solr if it successfully adds a
    *   filter query with the given value.
    */
@@ -47,15 +47,16 @@ Solr.Requesting.prototype = {
    },
   
   /**
-   * @param {String} value The value which should be handled
-   * @param {...} a, b, c, d Some parameter that will be transfered to addValue call
+   * @param {...} args All the arguments are directly re-passed to `addValue` call.
    * @returns {Function} Sends a request to Solr if it successfully adds a
    *   filter query with the given value.
    */
-  clickHandler: function (value, a, b, c) {
-    var self = this;
+  clickHandler: function () {
+    var self = this,
+        args = arguments;
+
     return function (e) {
-      if (self.addValue(value, a, b, c))
+      if (self.addValue.apply(self, args))
         self.doRequest();
         
       return false;
@@ -63,15 +64,16 @@ Solr.Requesting.prototype = {
   },
 
   /**
-   * @param {String} value The value.
-   * @param {...} a, b, c Some parameter that will be transfered to addValue call
+   * @param {...} args All the arguments are directly re-passed to `removeValue` call.
    * @returns {Function} Sends a request to Solr if it successfully removes a
    *   filter query with the given value.
    */
-  unclickHandler: function (value, a, b, c) {
-    var self = this;
+  unclickHandler: function () {
+    var self = this,
+        args = arguments;
+
     return function (e) {
-      if (self.removeValue(value, a, b, c)) 
+      if (self.removeValue.apply(self, args)) 
         self.doRequest();
         
       return false;

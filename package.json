@@ -1,60 +1,60 @@
 {
-  "name": "solr-jsx",
-  "version": "0.15.8",
-  "description": "A lightweight, JavaScript engine for building Solr requests",
-  "keywords": [
-    "solr",
-    "requests",
-    "extensible",
-    "flexible"
-  ],
-  "homepage": "https://github.com/ideaconsult/SolrJsX/wiki/",
-  "license": "MIT",
-  "author": [
-    {
-      "name": "Ivan (Jonan) Georgiev",
-      "homepage": "http://jonan.info/"
-    }
-  ],
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ideaconsult/SolrJsX"
-  },
-  "main": "solr-jsx.js",
-  "browser": [ "solr-jsx.min.js", "solr-jsx.widgets.min.js"],
-  "jspm": {
-    "main": "solr-jsx.js",
-    "shim": {
-      "solr-jsx": {
-        "exports": "Solr"
-      }
-    },
-    "files": [
-      "src",
-      "widgets"
-    ],
-    "buildConfig": {
-      "uglify": true
-    }
-  },
-  "spm": {
-    "main": "solr-jsx.js"
-  },
-  "dependencies": {
-    "as-sys": "git+ssh://git@github.com/thejonan/asSys.js.git"
-  },
-  "devDependencies": {
-    "uglify-js": "latest",
-    "jasmine-node": "latest",
-    "jasmine-core": "latest",
-    "smash": "latest"
-  },
-  "scripts": {
-    "pretest": "rm -f solr-jsx.* && export VERSION=`node -e 'console.log(require(\"./package.json\").version)'` && sed -E -e \"s/\\{\\{VERSION\\}\\}/$VERSION/\" src/Core.js > src/start.js && smash src/start.js > solr-jsx.js && rm -rf src/start.js && rsync node_modules/jasmine-core/lib/jasmine-core/*.js test/libs && rsync node_modules/jasmine-core/lib/jasmine-core/*.css test/libs && rsync node_modules/underscore/*.js test/libs && rsync node_modules/as-sys/*.js test/libs",
-    "test": "jasmine-node test && uglifyjs solr-jsx.js -mc --ie8 --keep-fnames -o solr-jsx.min.js && npm run-script widgets",
-    
-    "widgets": "smash widgets/Base.js > solr-jsx.widgets.js && uglifyjs solr-jsx.widgets.js -mc --ie8 --keep-fnames -o solr-jsx.widgets.min.js",
-    "prepare": "npm test && chmod a-w solr-jsx.*.js && zip solr-jsx.zip LICENSE solr-jsx.*.js",
-    "postpublish": "VERSION=`node -e 'console.log(require(\"./package.json\").version)'`; git push && git tag -am \"Release $VERSION.\" ${VERSION} && git push --tags"
-  }
+	"name": "solr-jsx",
+	"version": "0.15.8",
+	"description": "A lightweight, JavaScript engine for building Solr requests",
+	"keywords": [
+		"solr",
+		"requests",
+		"extensible",
+		"flexible"
+	],
+	"homepage": "https://github.com/ideaconsult/SolrJsX/wiki/",
+	"license": "MIT",
+	"author": {
+		"name": "Ivan (Jonan) Georgiev",
+		"homepage": "http://jonan.info/"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ideaconsult/SolrJsX"
+	},
+	"main": "solr-jsx.js",
+	"browser": ["solr-jsx.min.js", "solr-jsx.widgets.min.js"],
+	"jspm": {
+		"main": "solr-jsx.js",
+		"shim": {
+			"solr-jsx": {
+				"exports": "Solr"
+			}
+		},
+		"files": [
+			"src",
+			"widgets"
+		],
+		"buildConfig": {
+			"uglify": true
+		}
+	},
+	"spm": {
+		"main": "solr-jsx.js"
+	},
+	"dependencies": {
+		"as-sys": "git+ssh://git@github.com/thejonan/asSys.js.git",
+		"lodash": "^4.17.15",
+		"commbase-jsx": "file:../CommBaseJsX"
+	},
+	"devDependencies": {
+		"uglify-js": "latest",
+		"jasmine-node": "latest",
+		"jasmine-core": "latest",
+		"smash": "latest"
+	},
+	"scripts": {
+		"pretest": "rm -f solr-jsx.* && export VERSION=`node -e 'console.log(require(\"./package.json\").version)'` && sed -E -e \"s/\\{\\{VERSION\\}\\}/$VERSION/\" src/Core.js > src/start.js && smash src/start.js > solr-jsx.js && rm -rf src/start.js && rsync node_modules/jasmine-core/lib/jasmine-core/*.js test/libs && rsync node_modules/jasmine-core/lib/jasmine-core/*.css test/libs && rsync node_modules/underscore/*.js test/libs && rsync node_modules/as-sys/*.js test/libs",
+		"test": "jasmine-node test && uglifyjs solr-jsx.js -mc --ie8 --keep-fnames -o solr-jsx.min.js && npm run-script widgets",
+
+		"widgets": "smash widgets/Base.js > solr-jsx.widgets.js && uglifyjs solr-jsx.widgets.js -mc --ie8 --keep-fnames -o solr-jsx.widgets.min.js",
+		"prepare": "npm test && chmod a-w solr-jsx.*.js && zip solr-jsx.zip LICENSE solr-jsx.*.js",
+		"postpublish": "VERSION=`node -e 'console.log(require(\"./package.json\").version)'`; git push && git tag -am \"Release $VERSION.\" ${VERSION} && git push --tags"
+	}
 }
