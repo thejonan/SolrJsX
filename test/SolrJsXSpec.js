@@ -1,4 +1,5 @@
 asSys = require("as-sys");
+CB = require("commbase-jsx");
 Solr = require("../");
 
 a$ = asSys;
@@ -45,7 +46,7 @@ describe("SolrJsX:", function () {
 	
 	describe("Listenning", function () {
   	var aListener = { id: "a" },
-  	    topic = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+  	    topic = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
   	  	
   	it("Can add listeners", function () {
     	topic.addListeners(aListener);
@@ -76,13 +77,13 @@ describe("SolrJsX:", function () {
 	});
 	
 	describe("Making URL-based queries", function () {
-  	var main = new (a$(Solr.Configuring, Solr.QueryingURL))();
+  	var main = new (a$(Solr.Configuring, Solr.QueryingURL))({ servlet: 'test' });
   	
   	it("Forms the URL on simple parameters", function () {
     	main.resetParameters();
     	main.addParameter("q", "f:v");
     	main.addParameter("rows", 20);
-    	expect(main.prepareQuery()).toEqual({ url: "?q=f%3Av&rows=20" });
+    	expect(main.prepareQuery()).toEqual({ url: "test?q=f%3Av&rows=20" });
   	});
 
   	it("Forms the URL on multi parameters", function () {
@@ -91,7 +92,7 @@ describe("SolrJsX:", function () {
     	main.addParameter("fq", "field1:value1");
     	main.addParameter("fq", "field2:value2");
     	main.addParameter("json.nl", "map");  	
-    	expect(main.prepareQuery()).toEqual({ url: "?q=*%3A*&fq=field1%3Avalue1&fq=field2%3Avalue2&json.nl=map" });
+    	expect(main.prepareQuery()).toEqual({ url: "test?q=*%3A*&fq=field1%3Avalue1&fq=field2%3Avalue2&json.nl=map" });
   	});
   	
   	// TODO: Add some escapeValue involving tests
@@ -99,13 +100,13 @@ describe("SolrJsX:", function () {
 	});
 	
 	describe("Json-based querying", function () {
-  	var main = new (a$(Solr.Configuring, Solr.QueryingJson))();
+  	var main = new (a$(Solr.Configuring, Solr.QueryingJson))({ servlet: 'test' });
   	
   	it ("Prepares the query settings", function () {
     	main.resetParameters();
     	main.addParameter("q", "f:v");
     	main.addParameter("rows", 20);
-    	expect(main.prepareQuery()).toEqual({ url: "?q=f%3Av", contentType: "application/json", method: "POST", type: "POST", data: '{"params":{"rows":20}}' });
+    	expect(main.prepareQuery()).toEqual({ url: "test?q=f%3Av", contentType: "application/json", method: "POST", type: "POST", data: '{"params":{"rows":20}}' });
   	});
   	
   	it ("Handles simple parameters", function () {
@@ -117,7 +118,7 @@ describe("SolrJsX:", function () {
     	
     	var q = main.prepareQuery();
     	
-    	expect(q.url).toBe("?q=f%3Av&json.nl=map");
+    	expect(q.url).toBe("test?q=f%3Av&json.nl=map");
     	expect(JSON.parse(q.data)).toEqual({ 
       	params: { rows: 20, fq: [ "field1:value1" ] }
       });
@@ -130,7 +131,7 @@ describe("SolrJsX:", function () {
     	main.addParameter("json.facet", { avg_price: "avg(price)" });
     	
     	var q = main.prepareQuery();
-    	expect(q.url).toBe("?q=f%3Av");
+    	expect(q.url).toBe("test?q=f%3Av");
     	expect(JSON.parse(q.data)).toEqual({ 
       	params: { rows: 20 },
       	facet: { avg_price: "avg(price)" }
@@ -145,7 +146,7 @@ describe("SolrJsX:", function () {
     	main.addParameter("json.query", "field4:value4");
     	
     	var q = main.prepareQuery();
-    	expect(q.url).toBe("?q=f%3Av");
+    	expect(q.url).toBe("test?q=f%3Av");
     	expect(JSON.parse(q.data)).toEqual({ 
       	params: { rows: 20 },
       	query: [ "field3:value3", "field4:value4" ]
@@ -161,7 +162,7 @@ describe("SolrJsX:", function () {
 	describe("Json API faceting", function () {
     
   	describe("Simple faceting", function () {
-      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingJson))();
+      var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingJson))();
       var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", useJson: true });
       main.resetParameters();
       main.addListeners(facet);
@@ -188,7 +189,7 @@ describe("SolrJsX:", function () {
     });
     
     describe("Faceting with space named field", function () {
-      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingJson))();
+      var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingJson))();
       var facet = new (a$(Solr.Faceting))({ id: "test", field: "spaced field", useJson: true });
       main.resetParameters();
       main.addListeners(facet);
@@ -214,7 +215,7 @@ describe("SolrJsX:", function () {
     });
     
     describe("Faceting with exclusion", function () {
-      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingJson))();
+      var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingJson))();
       var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", exclusion: true, useJson: true });
       main.resetParameters();
       main.addListeners(facet);
@@ -230,7 +231,7 @@ describe("SolrJsX:", function () {
     });
     
     describe("Faceting with multi-values and aggregation", function () {
-      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+      var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
       var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", multivalue: true, aggregate: true });
       main.resetParameters();
       main.addListeners(facet);
@@ -259,7 +260,7 @@ describe("SolrJsX:", function () {
     });
 
     describe("Patterned faceting with multi-values and aggregation", function () {
-      var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+      var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
       var facet = new (a$(Solr.Faceting, Solr.Patterning))({ 
         id: "test", 
         field: "field", 
@@ -297,7 +298,7 @@ describe("SolrJsX:", function () {
 	}); // Json faceting
 	
 	describe("Ranging ablities", function () {
-    var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+    var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
     var range = new (a$(Solr.Ranging))({ id: "test", field: "field" });
     main.addListeners(range);
     main.init();
@@ -336,7 +337,7 @@ describe("SolrJsX:", function () {
 	});
 	
 	describe("Patterning ablities", function () {
-    var main = new (a$(Solr.Management, Solr.Configuring, Solr.QueryingURL))();
+    var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
     var range = new (a$(Solr.Ranging, Solr.Patterning))({ id: "test", field: "field", valuePattern:"-(condition:yes OR -{{v}})" });
     main.addListeners(range);
     main.init();

@@ -1,35 +1,50 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<!--[if lt IE 7 ]><html class="ie ie6" lang="en" xmlns="http://www.w3.org/1999/xhtml"> <![endif]-->
-<!--[if IE 7 ]><html class="ie ie7" lang="en" xmlns="http://www.w3.org/1999/xhtml"> <![endif]-->
-<!--[if IE 8 ]><html class="ie ie8" lang="en" xmlns="http://www.w3.org/1999/xhtml"> <![endif]-->
-<!--[if (gte IE 9)|!(IE)]><!-->
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-<!--<![endif]-->
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-<link rel="shortcut icon" type="image/png" href="libs/jasmine_favicon.png">
-<link rel="stylesheet" type="text/css" href="libs/jasmine.css">
-
-<script type="text/javascript">
-  var global = window;
-  function require(a) { 
-    if (a == "underscore" || a == "_")
-      return _;
-    else if (a == "asSys" || a == "as-sys")
-      return asSys;
-    else
-      return Solr;
-  }
-</script>
-
-<script type="text/javascript" src="libs/jasmine.js"></script>
-<script type="text/javascript" src="libs/jasmine-html.js"></script>
-<script type="text/javascript" src="libs/boot.js"></script>
-<script type="text/javascript" src="libs/underscore-min.js"></script>
-<script type="text/javascript" src="libs/as-sys.min.js"></script>
-
-<script type="text/javascript" src="../solr-jsx.js"></script>
-<script type="text/javascript" src="SolrJsXSpec.js"></script>
+  <meta charset="utf-8" />
+  <title>Mocha Tests</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://unpkg.com/mocha/mocha.css" />
 </head>
-<html>
+
+<body>
+  <div id="mocha"></div>
+
+  <script src="https://unpkg.com/chai/chai.js"></script>
+  <script src="https://unpkg.com/mocha/mocha.js"></script>
+  <script src="../node_modules/expectations/expectations.js"></script>
+
+  <script class="mocha-init">
+    var global = window;
+
+    function require(a) {
+      if (a == "lodash" || a == "_")
+        return _;
+      else if (a == "asSys" || a == "as-sys")
+        return asSys;
+      else if (a.match(/[.\/]/))
+        return window['solr-jsx'];
+      else
+        return window[a];
+    }
+
+    mocha.setup('bdd');
+    mocha.checkLeaks();
+  </script>
+  <script type="text/javascript" src="../node_modules/lodash/lodash.js"></script>
+  <script type="text/javascript" src="../node_modules/as-sys/as-sys.js"></script>
+  <script class="mocha-exec">
+    window.a$ = asSys;
+  </script>
+  <script type="text/javascript" src="../node_modules/commbase-jsx/commbase-jsx.js"></script>
+
+  <script type="text/javascript" src="../solr-jsx.js"></script>
+  <script type="text/javascript" src="SolrJsXSpec.js"></script>
+  <script type="text/javascript" src="AdaptersSpec.js"></script>
+  <script class="mocha-exec">
+    mocha.run();
+  </script>
+</body>
+
 </html>

@@ -1,15 +1,18 @@
 {
 	"name": "solr-jsx",
-	"version": "0.15.8",
+	"version": "1.0.0",
 	"description": "A lightweight, JavaScript engine for building Solr requests",
 	"keywords": [
 		"solr",
+		"client",
 		"requests",
 		"extensible",
-		"flexible"
+		"flexible",
+		"facets"
 	],
 	"homepage": "https://github.com/ideaconsult/SolrJsX/wiki/",
 	"license": "MIT",
+	"main": "solr-jsx.js",
 	"author": {
 		"name": "Ivan (Jonan) Georgiev",
 		"homepage": "http://jonan.info/"
@@ -18,43 +21,25 @@
 		"type": "git",
 		"url": "https://github.com/ideaconsult/SolrJsX"
 	},
-	"main": "solr-jsx.js",
-	"browser": ["solr-jsx.min.js", "solr-jsx.widgets.min.js"],
-	"jspm": {
-		"main": "solr-jsx.js",
-		"shim": {
-			"solr-jsx": {
-				"exports": "Solr"
-			}
-		},
-		"files": [
-			"src",
-			"widgets"
-		],
-		"buildConfig": {
-			"uglify": true
-		}
-	},
-	"spm": {
-		"main": "solr-jsx.js"
-	},
+	"module": "src/index.js",
+	"browser": [
+		"solr-jsx.min.js"
+	],
 	"dependencies": {
 		"as-sys": "git+ssh://git@github.com/thejonan/asSys.js.git",
-		"lodash": "^4.17.15",
-		"commbase-jsx": "file:../CommBaseJsX"
+		"lodash": "^4.17.15"
 	},
 	"devDependencies": {
-		"uglify-js": "latest",
-		"jasmine-node": "latest",
-		"jasmine-core": "latest",
-		"smash": "latest"
+		"commbase-jsx": "file:../CommBaseJsX",
+		"expectations": "^1.0.0",
+		"mocha": "^6.2.1",
+		"rollup": "^1.23.1",
+		"terser": "^4.3.8"
 	},
 	"scripts": {
-		"pretest": "rm -f solr-jsx.* && export VERSION=`node -e 'console.log(require(\"./package.json\").version)'` && sed -E -e \"s/\\{\\{VERSION\\}\\}/$VERSION/\" src/Core.js > src/start.js && smash src/start.js > solr-jsx.js && rm -rf src/start.js && rsync node_modules/jasmine-core/lib/jasmine-core/*.js test/libs && rsync node_modules/jasmine-core/lib/jasmine-core/*.css test/libs && rsync node_modules/underscore/*.js test/libs && rsync node_modules/as-sys/*.js test/libs",
-		"test": "jasmine-node test && uglifyjs solr-jsx.js -mc --ie8 --keep-fnames -o solr-jsx.min.js && npm run-script widgets",
-
-		"widgets": "smash widgets/Base.js > solr-jsx.widgets.js && uglifyjs solr-jsx.widgets.js -mc --ie8 --keep-fnames -o solr-jsx.widgets.min.js",
-		"prepare": "npm test && chmod a-w solr-jsx.*.js && zip solr-jsx.zip LICENSE solr-jsx.*.js",
-		"postpublish": "VERSION=`node -e 'console.log(require(\"./package.json\").version)'`; git push && git tag -am \"Release $VERSION.\" ${VERSION} && git push --tags"
+		"build": "rm -f $npm_package_name*.js && rollup -c && sed -E -e \"s/\\{\\{VERSION\\}\\}/$npm_package_version/\" $npm_package_main | terser -b --comments -o $npm_package_main",
+		"test": "mocha test --require expectations",
+		"prepare": "npm run build && npm test && terser -mc --ie8 --keep-fnames -o ${npm_package_name}.min.js -- $npm_package_main && chmod a-w $npm_package_name*.js && zip ${npm_package_main}.zip LICENSE ./$npm_package_name*.js",
+		"postpublish": "git push && git tag -am \"Release $npm_package_version.\" ${npm_package_version} && git push --tags"
 	}
 }
