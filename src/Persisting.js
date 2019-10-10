@@ -7,12 +7,12 @@
 
 import a$ from 'as-sys';
 
-function Persistency(settings) {
+function Persisting(settings) {
 	a$.setup(this, settings);
 	this.storage = {};
 };
 
-Persistency.prototype = {
+Persisting.prototype = {
 	persistentParams: [], // Parameters that need to stay persistent between calls.
 
 	addParameter: function (param, value, domain) {
@@ -40,4 +40,4 @@ Persistency.prototype = {
 	}
 };
 
-export default Persistency;
+export default Persisting;

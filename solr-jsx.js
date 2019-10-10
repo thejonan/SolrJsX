@@ -293,11 +293,11 @@
             return response;
         }
     };
-    function Persistency(settings) {
+    function Persisting(settings) {
         a$$1.setup(this, settings);
         this.storage = {};
     }
-    Persistency.prototype = {
+    Persisting.prototype = {
         persistentParams: [],
         addParameter: function(param, value, domain) {
             a$$1.pass(this, "addParameter", Solf.Configuring, param, value, domain);
@@ -352,15 +352,15 @@
             };
         }
     };
-    function Acting(settings) {
+    function Eventing(settings) {
         a$$1.setup(this, settings);
         this.manager = null;
     }
-    Acting.prototype = {
+    Eventing.prototype = {
         resetPage: true,
         customResponse: null,
         init: function(manager) {
-            a$$1.pass(this, Acting, "init", manager);
+            a$$1.pass(this, Eventing, "init", manager);
             this.manager = manager;
         },
         doRequest: function() {
@@ -368,9 +368,9 @@
             this.manager.doRequest(self.customResponse);
         },
         updateHandler: function() {
-            var self = this;
+            var self = this, args = arguments;
             return function() {
-                var res = self.addValue.apply(self, arguments);
+                var res = self.addValue.apply(self, args);
                 if (res) self.doRequest();
                 return res;
             };
@@ -942,9 +942,9 @@
     Solr$1.Compatibility = Compatibility;
     Solr$1.QueryingURL = QueryingURL;
     Solr$1.QueryingJson = QueryingJson;
-    Solr$1.Persistency = Persistency;
+    Solr$1.Persisting = Persisting;
     Solr$1.Paging = Paging;
-    Solr$1.Acting = Acting;
+    Solr$1.Eventing = Eventing;
     Solr$1.Spying = Spying;
     Solr$1.Patterning = Patterning;
     Solr$1.Texting = Texting;

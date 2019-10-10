@@ -1,5 +1,5 @@
 /** SolrJsX library - a neXt Solr queries JavaScript library.
- * Simple indoor request on action skills.
+ * Simple indoor request on event handling skills.
  *
  * Author: Ivan Georgiev
  * Copyright © 2017-2019, IDEAConsult Ltd. All rights reserved.
@@ -7,19 +7,19 @@
 
 import a$ from 'as-sys';
 
-function Acting(settings) {
+function Eventing(settings) {
 	a$.setup(this, settings);
 	this.manager = null;
 };
 
-Acting.prototype = {
+Eventing.prototype = {
 	resetPage: true, // Whether to reset to the first page on each requst.
 	customResponse: null, // A custom response function, which if present invokes private doRequest.
 
 	/** Make the initial setup of the manager.
 	 */
 	init: function (manager) {
-		a$.pass(this, Acting, "init", manager);
+		a$.pass(this, Eventing, "init", manager);
 		this.manager = manager;
 	},
 
@@ -38,9 +38,11 @@ Acting.prototype = {
 	 *   filter query with the given value.
 	 */
 	updateHandler: function () {
-		var self = this;
+		var self = this,
+			args = arguments;
+			
 		return function () {
-			var res = self.addValue.apply(self, arguments);
+			var res = self.addValue.apply(self, args);
 			if (res)
 				self.doRequest();
 
@@ -83,4 +85,4 @@ Acting.prototype = {
 	}
 };
 
-export default Acting;
+export default Eventing;
