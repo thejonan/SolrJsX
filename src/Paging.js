@@ -73,10 +73,10 @@ Paging.prototype = {
 
 	/** We need to set all our internals.
 	 * NOTE: Don't forget to manually call this activity on the skill
-	 * using {@code}a$.pass(this, <inheriting skill>, 'afterSuccess');{@code}
+	 * using {@code}a$.pass(this, <inheriting skill>, 'afterResponse');{@code}
 	 */
 
-	afterSuccess: function () {
+	afterResponse: function () {
 		var offset = parseInt(this.manager.response.responseHeader && this.manager.response.responseHeader.params && this.manager.response.responseHeader.params.start || this.manager.getParameter('start').value || 0);
 
 		this.pageSize = parseInt(this.manager.response.responseHeader && this.manager.response.responseHeader.params && this.manager.response.responseHeader.params.rows || this.manager.getParameter('rows').value || this.pageSize);

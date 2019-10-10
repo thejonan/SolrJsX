@@ -5,7 +5,7 @@ A JavaScript client library for managing Solr requests
 ## TODO
 
 - Finish support for Json (in-body) requests. (`QueryingJSON` skill).
-- Add IdentityData skill - just transfering data form `afterSuccess` to `onData`.
+- Add IdentityData skill - just transfering data form `afterResponse` to `onData`.
 
 - Potentially make widgets Vue.js enriched, i.e. - supplying only element (template).
 

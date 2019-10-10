@@ -26,7 +26,7 @@ describe("SolrJsX adapters", function () {
           this.notified = false; 
         };
         
-    EmptyConsumer.prototype.afterSuccess = function(data) { 
+    EmptyConsumer.prototype.afterResponse = function(data) { 
       this.notified = true;
       expect(data).toBeDefined(); 
       expect(data).toBe("test-servlet");

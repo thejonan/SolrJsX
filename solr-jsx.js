@@ -337,7 +337,7 @@
         nextPage: function() {
             return this.currentPage < this.totalPages ? this.currentPage + 1 : null;
         },
-        afterSuccess: function() {
+        afterResponse: function() {
             var offset = parseInt(this.manager.response.responseHeader && this.manager.response.responseHeader.params && this.manager.response.responseHeader.params.start || this.manager.getParameter("start").value || 0);
             this.pageSize = parseInt(this.manager.response.responseHeader && this.manager.response.responseHeader.params && this.manager.response.responseHeader.params.rows || this.manager.getParameter("rows").value || this.pageSize);
             this.totalEntries = parseInt(this.manager.response.response.numFound);
