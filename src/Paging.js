@@ -77,7 +77,7 @@ Paging.prototype.nextPage = function () {
  * using {@code}a$.pass(this, <inheriting skill>, 'afterResponse');{@code}
  */
 
-Paging.prototype.afterResponse = function (response, ajaxOpts, jqXHR) {
+Paging.prototype.afterResponse = function (data, jqXHR, ajaxOpts) {
 	var rawResponse = jqXHR.responseJSON,
 		offset = parseInt(rawResponse.responseHeader && rawResponse.responseHeader.params && rawResponse.responseHeader.params.start || this.manager.getParameter('start').value || 0);
 

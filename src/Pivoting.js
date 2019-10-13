@@ -102,18 +102,15 @@ Pivoting.prototype.getFaceterEntry = function (idx) {
 };
 
 Pivoting.prototype.getPivotCounts = function (pivot_counts) {
-	if (this.useJson === true) {
-		if (pivot_counts == null)
-			pivot_counts = this.manager.response.facets;
-
+	if (!pivot_counts)
+		return [];
+	else if (this.useJson === true)
 		return pivot_counts.count > 0 ? pivot_counts[this.rootId].buckets : [];
-	} else {
-		if (pivot_counts == null)
-			pivot_counts = this.manager.response.pivot;
-
+	else {
+		// TODO!!!
 		throw {
 			error: "Not supported for now!"
-		}; // TODO!!!
+		}; 
 	}
 };
 

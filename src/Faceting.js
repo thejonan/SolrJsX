@@ -293,14 +293,10 @@ Faceting.prototype.clearValues = function () {
 Faceting.prototype.getFacetCounts = function (facet_counts) {
 	var property;
 
-	if (this.useJson === true) {
-		if (facet_counts == null)
-			facet_counts = this.manager.response.facets;
+	if (!facet_counts)
+		return [];
+	else if (this.useJson === true)
 		return facet_counts.count > 0 ? facet_counts[this.id].buckets : [];
-	}
-
-	if (facet_counts == null)
-		facet_counts = this.manager.response.facet_counts;
 
 	if (this.facet.field !== undefined)
 		property = 'facet_fields';
