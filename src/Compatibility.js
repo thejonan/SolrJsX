@@ -7,12 +7,7 @@
 
 import a$ from 'as-sys';
 
-function Compatibility(settings) {
-	a$.setup(this, settings);
-	this.store.root = this;
-};
-
-Compatibility.prototype = {
+var defSettings = {
 	store: {
 		addByValue: function (name, value, locals) {
 			return this.root.addParameter(name, value, locals);
@@ -25,9 +20,15 @@ Compatibility.prototype = {
 		},
 
 		// TODO: Add another ParameterStore methods
-	},
-
-	// TODO: Add AjaxSolr.AbstractManager methods that differ from ours.
+	}
 };
+
+function Compatibility(settings) {
+	a$.setup(this, defSettings, settings);
+	this.store.root = this;
+};
+
+// TODO: Add AjaxSolr.AbstractManager methods that differ from ours.
+// Compatibility.prototype ...
 
 export default Compatibility;

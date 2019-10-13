@@ -8,38 +8,37 @@
 import a$ from 'as-sys';
 import _ from 'lodash';
 
-function Listing(settings) {
-	a$.setup(this, settings);
-	this.manager = null;
-};
-
-Listing.prototype = {
+var defSettings = {
 	nestingRules: null, // If document nesting is present - here are the rules for it.
 	nestingField: null, // The default nesting field.
 	nestLevel: null, // Inform which level needs to be nested into the listing.
 	listingFields: ["*"], // The fields that need to be present in the result list.
+};
 
-	/** Make the initial setup of the manager.
-	 */
-	init: function (manager) {
-		a$.pass(this, Listing, 'init', manager);
+function Listing(settings) {
+	a$.setup(this, defSettings, settings);
+	this.manager = null;
+};
 
-		if (this.nestLevel != null) {
-			var level = this.nestingRules[this.nestLevel],
-				chF = level.field || this.nestingField,
-				parF = this.nestingRules[level.parent] && this.nestingRules[level.parent].field || this.nestingField;
+/** Make the initial setup of the manager.
+ */
+Listing.prototype.init = function (manager) {
+	a$.pass(this, Listing, 'init', manager);
 
-			manager.addParameter('fl',
-				"[child parentFilter=" + parF + ":" + level.parent +
-				" childFilter=" + chF + ":" + this.nestLevel +
-				" limit=" + level.limit + "]");
-		}
+	if (this.nestLevel != null) {
+		var level = this.nestingRules[this.nestLevel],
+			chF = level.field || this.nestingField,
+			parF = this.nestingRules[level.parent] && this.nestingRules[level.parent].field || this.nestingField;
 
-		_.each(this.listingFields, function (f) {
-			manager.addParameter('fl', f)
-		});
+		manager.addParameter('fl',
+			"[child parentFilter=" + parF + ":" + level.parent +
+			" childFilter=" + chF + ":" + this.nestLevel +
+			" limit=" + level.limit + "]");
 	}
 
+	_.each(this.listingFields, function (f) {
+		manager.addParameter('fl', f)
+	});
 };
 
 export default Listing;

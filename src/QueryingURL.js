@@ -9,31 +9,33 @@ import a$ from 'as-sys';
 
 import Solr from './Core';
 
-function QueryingURL(settings) {
-	a$.setup(this, settings);
-};
-
-QueryingURL.prototype = {
-	__expects: [ "enumerateParameters" ],
+var defSettings = {
 	serverUrl: null,
 	servlet: "select",
+};
 
-	prepareQuery: function (servlet) {
-		var query = [];
+function QueryingURL(settings) {
+	a$.setup(this, defSettings, settings);
+};
 
-		this.enumerateParameters(function (param) {
-			var p = Solr.stringifyParameter(param);
-			if (p != null)
-				query.push(p);
-		});
+QueryingURL.prototype.__expects = ["enumerateParameters"];
 
-		return { url: Solr.buildUrl(this.serverUrl, (servlet || this.servlet), query) };
-	},
+QueryingURL.prototype.prepareQuery = function (servlet) {
+	var query = [];
 
-	parseResponse: function (response) {
-		return response;
-	}
+	this.enumerateParameters(function (param) {
+		var p = Solr.stringifyParameter(param);
+		if (p != null)
+			query.push(p);
+	});
 
+	return {
+		url: Solr.buildUrl(this.serverUrl, (servlet || this.servlet), query)
+	};
+};
+
+QueryingURL.prototype.parseResponse = function (response) {
+	return response;
 };
 
 export default QueryingURL;

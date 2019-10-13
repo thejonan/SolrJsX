@@ -20,80 +20,83 @@ var paramJsonName = function (name) {
 	return m && m[1];
 };
 
-function QueryingJson(settings) {
-	a$.setup(this, settings);
-};
-
-QueryingJson.prototype = {
-	__expects: ["enumerateParameters"],
+var defSettings = {
 	useBody: true,
 	servlet: "select",
-	serverUrl: null,
+	serverUrl: null
+};
 
-	prepareQuery: function () {
-		var query = [],
-			json = { 'params': {} },
-			paramValue = function (param) {
-				if (paramIsUrlOnly(param.name)) {
-					query.push(Solr.stringifyParameter(param));
-					return;
-				}
+function QueryingJson(settings) {
+	a$.setup(this, defSettings, settings);
+};
 
-				// Now, make the rest of the test.
-				var val = null;
+QueryingJson.prototype.__expects = ["enumerateParameters"];
 
-				if (typeof param.value === 'string')
-					val = Solr.stringifyDomain(param) + param.value;
-				else if (param.domain !== undefined)
-					val = _.extend({}, param.value, {
-						'domain': param.domain
-					});
-				else
-					val = param.value;
-
-				return val;
-			};
-
-		// make shallow enumerator so that arrays are saved as such.
-		this.enumerateParameters(false, function (param) {
-			// Take care for some very special parameters...
-			var val = !Array.isArray(param) ? paramValue(param) : param.map(paramValue),
-				name = !Array.isArray(param) ? param.name : param[0].name,
-				jname = paramJsonName(name);
-
-			if (val == undefined)
+QueryingJson.prototype.prepareQuery = function () {
+	var query = [],
+		json = {
+			'params': {}
+		},
+		paramValue = function (param) {
+			if (paramIsUrlOnly(param.name)) {
+				query.push(Solr.stringifyParameter(param));
 				return;
-			else if (jname !== null)
-				_.set(json, jname, val);
+			}
+
+			// Now, make the rest of the test.
+			var val = null;
+
+			if (typeof param.value === 'string')
+				val = Solr.stringifyDomain(param) + param.value;
+			else if (param.domain !== undefined)
+				val = _.extend({}, param.value, {
+					'domain': param.domain
+				});
 			else
-				json.params[name] = val;
-		});
+				val = param.value;
 
-		json = JSON.stringify(json);
-		if (!this.useBody) {
-			query.push(encodeURIComponent(json));
-			return {
-				url: Solr.buildUrl(this.serverUrl, this.servlet, query)
-			};
-		} else
-			return {
-				url: Solr.buildUrl(this.serverUrl, this.servlet, query),
-				data: json,
-				contentType: "application/json",
-				type: "POST",
-				method: "POST"
-			};
-	},
+			return val;
+		};
 
-	parseResponse: function (response) {
-		if (response.responseHeader.params && response.responseHeader.params.json != null) {
-			var json = JSON.parse(response.responseHeader.params.json);
-			_.extend(response.responseHeader.params, json, json.params);
-			delete response.responseHeader.params.json;
-		}
+	// make shallow enumerator so that arrays are saved as such.
+	this.enumerateParameters(false, function (param) {
+		// Take care for some very special parameters...
+		var val = !Array.isArray(param) ? paramValue(param) : param.map(paramValue),
+			name = !Array.isArray(param) ? param.name : param[0].name,
+			jname = paramJsonName(name);
 
-		return response;
+		if (val == undefined)
+			return;
+		else if (jname !== null)
+			_.set(json, jname, val);
+		else
+			json.params[name] = val;
+	});
+
+	json = JSON.stringify(json);
+	if (!this.useBody) {
+		query.push(encodeURIComponent(json));
+		return {
+			url: Solr.buildUrl(this.serverUrl, this.servlet, query)
+		};
+	} else
+		return {
+			url: Solr.buildUrl(this.serverUrl, this.servlet, query),
+			data: json,
+			contentType: "application/json",
+			type: "POST",
+			method: "POST"
+		};
+};
+
+QueryingJson.prototype.parseResponse = function (response) {
+	if (response.responseHeader.params && response.responseHeader.params.json != null) {
+		var json = JSON.parse(response.responseHeader.params.json);
+		_.extend(response.responseHeader.params, json, json.params);
+		delete response.responseHeader.params.json;
 	}
+
+	return response;
 };
 
 export default QueryingJson;

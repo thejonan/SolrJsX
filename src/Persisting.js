@@ -7,37 +7,37 @@
 
 import a$ from 'as-sys';
 
+var defSettings = {
+	persistentParams: [], // Parameters that need to stay persistent between calls.
+};
+
 function Persisting(settings) {
-	a$.setup(this, settings);
+	this.persistentParams = (settings && settings.persistentParams) || defSettings.persistentParams;
 	this.storage = {};
 };
 
-Persisting.prototype = {
-	persistentParams: [], // Parameters that need to stay persistent between calls.
+Persisting.prototype.addParameter = function (param, value, domain) {
+	// TODO Check if the parameter is persistent and store it.
 
-	addParameter: function (param, value, domain) {
-		// TODO Check if the parameter is persistent and store it.
+	// And make the call to the "super".
+	a$.pass(this, "addParameter", Solf.Configuring, param, value, domain);
+	return param;
+};
 
-		// And make the call to the "super".
-		a$.pass(this, "addParameter", Solf.Configuring, param, value, domain);
-		return param;
-	},
+/** Remove parameters. If needle is an array it is treated as an idices array,
+ * if not - it is first passed to findParameters() call.
+ */
+Persisting.prototype.removeParameters = function (indices) {
+	// TODO Check if the parameter is persistent and store it.
 
-	/** Remove parameters. If needle is an array it is treated as an idices array,
-	 * if not - it is first passed to findParameters() call.
-	 */
-	removeParameters: function (indices) {
-		// TODO Check if the parameter is persistent and store it.
+	// And make the call to the "super".
+	a$.pass(this, "removeParameters", Solf.Configuring, indices);
+};
 
-		// And make the call to the "super".
-		a$.pass(this, "removeParameters", Solf.Configuring, indices);
-	},
+/** The method that is invoked just before making the actual request.
+ */
+Persisting.prototype.onPrepare = function (settings) {
 
-	/** The method that is invoked just before making the actual request.
-	 */
-	onPrepare: function (settings) {
-
-	}
 };
 
 export default Persisting;

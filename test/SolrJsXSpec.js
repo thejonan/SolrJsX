@@ -336,7 +336,7 @@ describe("SolrJsX:", function () {
     
 	});
 	
-	describe("Patterning ablities", function () {
+	describe("Patterning abilities", function () {
     var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
     var range = new (a$(Solr.Ranging, Solr.Patterning))({ id: "test", field: "field", valuePattern:"-(condition:yes OR -{{v}})" });
     main.addListeners(range);

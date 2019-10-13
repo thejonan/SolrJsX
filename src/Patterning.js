@@ -7,8 +7,12 @@
 
 import _ from 'lodash';
 
+var defSettings = {
+	valuePattern: "{{-}}{{v}}", // The default pattern.
+};
+
 function Patterning(settings) {
-	this.valuePattern = settings && settings.valuePattern || this.valuePattern;
+	this.valuePattern = (settings && settings.valuePattern) || defSettings.valuePattern;
 	var oldRE = this.fqRegExp.toString().replace(/^\/\^?|\$?\/$/g, ""),
 		newRE = "^" +
 		_.escapeRegExp(this.valuePattern.replace(/\{\{!?-\}\}/g, "-?").replace("{{v}}", "__v__"))
@@ -19,17 +23,12 @@ function Patterning(settings) {
 	this.fqRegExp = new RegExp(newRE);
 };
 
-Patterning.prototype = {
-	valuePattern: "{{-}}{{v}}", // The default pattern.
-
-	fqValue: function (value, exclude) {
-		return this.valuePattern
-			.replace("{{-}}", exclude ? "-" : "") // place the exclusion...
-			.replace("{{!-}}", exclude ? "" : "-") // ... or negative exclusion.
-			.replace("{{v}}", a$.pass(this, Solr.Patterning, "fqValue", value, exclude)) // now put the actual value
-			.replace("--", ""); // and make sure there is not double-negative. TODO!
-	}
-
+Patterning.prototype.fqValue = function (value, exclude) {
+	return this.valuePattern
+		.replace("{{-}}", exclude ? "-" : "") // place the exclusion...
+		.replace("{{!-}}", exclude ? "" : "-") // ... or negative exclusion.
+		.replace("{{v}}", a$.pass(this, Solr.Patterning, "fqValue", value, exclude)) // now put the actual value
+		.replace("--", ""); // and make sure there is not double-negative. TODO!
 };
 
 export default Patterning;

@@ -19,14 +19,12 @@
     var global = window;
 
     function require(a) {
-      if (a == "lodash" || a == "_")
-        return _;
-      else if (a == "asSys" || a == "as-sys")
-        return asSys;
-      else if (a.match(/[.\/]/))
-        return window['solr-jsx'];
-      else
-        return window[a];
+      var map = {
+        'lodash': "_",
+        'as-sys': "asSys",
+        'commbase-jsx': "CommBase",
+      }
+      return window[a] || window[map[a]] || window['solr-jsx'] || window.Solr;
     }
 
     mocha.setup('bdd');

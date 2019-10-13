@@ -8,46 +8,45 @@
 import a$ from 'as-sys';
 import _ from 'lodash';
 
+var defSettings = {
+	servlet: null, // The custom servlet to use for the request
+};
+
 function Spying(settings) {
-	a$.setup(this, settings);
+	a$.setup(this, defSettings, settings);
 	this.manager = null;
 };
 
-Spying.prototype = {
-	servlet: null, // The custom servlet to use for the request
+/** Make the initial setup of the manager.
+ */
+Spying.prototype.init = function (manager) {
+	a$.pass(this, Spying, "init", manager);
+	this.manager = manager;
+};
 
-	/** Make the initial setup of the manager.
-	 */
-	init: function (manager) {
-		a$.pass(this, Spying, "init", manager);
-		this.manager = manager;
-	},
+/** Make the actual request.
+ */
+Spying.prototype.doSpying = function (settings, callback) {
+	var man = this.manager;
 
-	/** Make the actual request.
-	 */
-	doSpying: function (settings, callback) {
-		var man = this.manager;
+	man.pushParameters(true);
+	if (typeof settings === "function")
+		settings(man);
+	else _.each(settings, function (v, k) {
+		if (v == null)
+			man.removeParameters(k);
+		else if (Array.isArray(v))
+			_.each(v, function (vv) {
+				man.addParameter(k, vv);
+			});
+		else if (typeof v === "object")
+			man.addParameter(v);
+		else
+			man.addParameter(k, v);
+	});
 
-		man.pushParameters(true);
-		if (typeof settings === "function")
-			settings(man);
-		else _.each(settings, function (v, k) {
-			if (v == null)
-				man.removeParameters(k);
-			else if (Array.isArray(v))
-				_.each(v, function (vv) {
-					man.addParameter(k, vv);
-				});
-			else if (typeof v === "object")
-				man.addParameter(v);
-			else
-				man.addParameter(k, v);
-		});
-
-		man.doRequest(this.servlet, callback || this.onSpyResponse);
-		man.popParameters();
-	}
-
+	man.doRequest(this.servlet, callback || this.onSpyResponse);
+	man.popParameters();
 };
 
 export default Spying;
