@@ -20,7 +20,7 @@ describe("SolrJsX adapters", function () {
       return { url: servlet };
     }
 
-  	var topic = new (a$(CB.Communicating, EmptyTranslator))({ prop: "test", connector: { ajax: function (opts) { opts.success(opts.url); } } }),
+  	var topic = new (a$(CB.Communicating, EmptyTranslator))({ prop: "test", connector: function (opts) { opts.success(opts.url); } }),
   	    EmptyConsumer = function (obj) { 
           _.extend(this, obj);
           this.notified = false; 
