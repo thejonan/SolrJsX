@@ -1,5 +1,4 @@
 asSys = require("as-sys");
-CB = require("commbase-jsx");
 Solr = require("../");
 
 a$ = asSys;
@@ -42,38 +41,6 @@ describe("SolrJsX:", function () {
     	main.resetParameters();
     	expect(main.parameterStore).toEqual({});
   	});
-	});
-	
-	describe("Listenning", function () {
-  	var aListener = { id: "a" },
-  	    topic = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
-  	  	
-  	it("Can add listeners", function () {
-    	topic.addListeners(aListener);
-    	expect(a$.weight(topic.listeners)).toBe(1);
-  	});
-
-    it("Listener can be removed", function () {
-      topic.addListeners(aListener);
-      topic.removeOneListener("a");
-      expect(a$.weight(topic.listeners)).toBe(0);
-    })
-
-    it("Many consumers can be removed", function () {
-      topic.addListeners(aListener);
-      topic.addListeners({ id: "b" });
-      topic.removeListeners(function (c, i) { return i == "a"; });
-      expect(a$.weight(topic.listeners)).toBe(1);
-      expect(topic.getListener("b")).toBeDefined();
-    })
-    
-    it("Can enumerate consumers", function () {
-      topic.addListeners(aListener);
-      topic.addListeners({ id: "b" });
-      var ctx = { count: 0 };
-      topic.enumerateListeners(function () { ++this.count; }, ctx);
-      expect(ctx.count).toBe(2);
-    });
 	});
 	
 	describe("Making URL-based queries", function () {
@@ -162,11 +129,10 @@ describe("SolrJsX:", function () {
 	describe("Json API faceting", function () {
     
   	describe("Simple faceting", function () {
-      var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingJson))();
+      var main = new (a$(Solr.Configuring, Solr.QueryingJson))();
       var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", useJson: true });
       main.resetParameters();
-      main.addListeners(facet);
-      main.init();
+      facet.init(main);
       
       it("Has built proper json configuration", function () {
         var data = JSON.parse(main.prepareQuery().data);
@@ -189,11 +155,10 @@ describe("SolrJsX:", function () {
     });
     
     describe("Faceting with space named field", function () {
-      var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingJson))();
+      var main = new (a$(Solr.Configuring, Solr.QueryingJson))();
       var facet = new (a$(Solr.Faceting))({ id: "test", field: "spaced field", useJson: true });
       main.resetParameters();
-      main.addListeners(facet);
-      main.init();
+      facet.init(main);
 
       it("Has built proper json configuration", function () {
         var data = JSON.parse(main.prepareQuery().data);
@@ -215,11 +180,10 @@ describe("SolrJsX:", function () {
     });
     
     describe("Faceting with exclusion", function () {
-      var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingJson))();
+      var main = new (a$(Solr.Configuring, Solr.QueryingJson))();
       var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", exclusion: true, useJson: true });
       main.resetParameters();
-      main.addListeners(facet);
-      main.init();
+      facet.init(main);
       
       it("Has built proper json configuration", function () {
         var data = JSON.parse(main.prepareQuery().data);
@@ -231,11 +195,10 @@ describe("SolrJsX:", function () {
     });
     
     describe("Faceting with multi-values and aggregation", function () {
-      var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
+      var main = new (a$(Solr.Configuring, Solr.QueryingURL))();
       var facet = new (a$(Solr.Faceting))({ id: "test", field: "field", multivalue: true, aggregate: true });
       main.resetParameters();
-      main.addListeners(facet);
-      main.init();
+      facet.init(main);
       
       it ("Property adds a simple value", function () {
         main.resetParameters();
@@ -260,7 +223,7 @@ describe("SolrJsX:", function () {
     });
 
     describe("Patterned faceting with multi-values and aggregation", function () {
-      var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
+      var main = new (a$(Solr.Configuring, Solr.QueryingURL))();
       var facet = new (a$(Solr.Faceting, Solr.Patterning))({ 
         id: "test", 
         field: "field", 
@@ -269,8 +232,7 @@ describe("SolrJsX:", function () {
         valuePattern:"-(condition:yes OR -{{v}})"
       });
       main.resetParameters();
-      main.addListeners(facet);
-      main.init();
+      facet.init(main);
       
       it ("Property adds a simple value", function () {
         main.resetParameters();
@@ -298,10 +260,10 @@ describe("SolrJsX:", function () {
 	}); // Json faceting
 	
 	describe("Ranging ablities", function () {
-    var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
+    var main = new (a$(Solr.Configuring, Solr.QueryingURL))();
     var range = new (a$(Solr.Ranging))({ id: "test", field: "field" });
-    main.addListeners(range);
-    main.init();
+
+    range.init(main);
     
     it ("Property adds a simple range", function () {
       main.resetParameters();
@@ -337,10 +299,9 @@ describe("SolrJsX:", function () {
 	});
 	
 	describe("Patterning abilities", function () {
-    var main = new (a$(CB.Communicating, Solr.Configuring, Solr.QueryingURL))();
+    var main = new (a$(Solr.Configuring, Solr.QueryingURL))();
     var range = new (a$(Solr.Ranging, Solr.Patterning))({ id: "test", field: "field", valuePattern:"-(condition:yes OR -{{v}})" });
-    main.addListeners(range);
-    main.init();
+    range.init(main);
     
     it ("Property adds a simple range", function () {
       main.resetParameters();
@@ -362,6 +323,5 @@ describe("SolrJsX:", function () {
     });
     
 	});
-	
 	
 });

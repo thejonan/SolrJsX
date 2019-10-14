@@ -21,8 +21,7 @@
     function require(a) {
       var map = {
         'lodash': "_",
-        'as-sys': "asSys",
-        'commbase-jsx': "CommBase",
+        'as-sys': "asSys"
       }
       return window[a] || window[map[a]] || window['solr-jsx'] || window.Solr;
     }
@@ -35,7 +34,6 @@
   <script class="mocha-exec">
     window.a$ = asSys;
   </script>
-  <script type="text/javascript" src="../node_modules/commbase-jsx/commbase-jsx.js"></script>
 
   <script type="text/javascript" src="../solr-jsx.js"></script>
   <script type="text/javascript" src="SolrJsXSpec.js"></script>

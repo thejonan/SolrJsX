@@ -1,6 +1,12 @@
+/** SolrJsX library - a neXt Solr queries JavaScript library.
+ * Response adapters unit tests.
+ *
+ * Author: Ivan Georgiev
+ * Copyright © 2016-2019, IDEAConsult Ltd. All rights reserved.
+ */
+
 asSys = require("as-sys");
 _ = require("lodash");
-CB = require("commbase-jsx");
 Solr = require("..");
 
 a$ = asSys;
@@ -10,42 +16,6 @@ a$ = asSys;
 describe("SolrJsX adapters", function () {
   
 	// The actual tests start here.
-	describe("Basic translation", function () {
-	  var EmptyTranslator = function (obj) { _.extend(this, obj); };
-    EmptyTranslator.prototype.parseResponse = function (response, scope) { 
-      this.scope = scope; 
-      return this.data = a$.pass(this, EmptyTranslator, response);
-    };
-    EmptyTranslator.prototype.prepareQuery = (servlet) => {
-      return { url: servlet };
-    }
-
-  	var topic = new (a$(CB.Communicating, EmptyTranslator))({ prop: "test", connector: function (opts) { opts.success(opts.url); } }),
-  	    EmptyConsumer = function (obj) { 
-          _.extend(this, obj);
-          this.notified = false; 
-        };
-        
-    EmptyConsumer.prototype.afterResponse = function(data) { 
-      this.notified = true;
-      expect(data).toBeDefined(); 
-      expect(data).toBe("test-servlet");
-    };
-    var consumer = new EmptyConsumer( { id: "a" });
-  	    
-  	it("Can be instantiated with SolrJsX Manager", function () {
-    	expect(topic).toBeDefined();
-    	expect(topic.prop).toBe("test");
-  	});
-  	
-    it("Consumers get notified", function () {
-      topic.addListeners(consumer);
-      topic.doRequest("test-servlet");
-      topic.parseResponse({ prop: "test" }, "scope");
-      expect(consumer.notified).toBeTruthy();
-    });
-	}); // End of consumption test bundle
-	
 	var basicTranslationSpecs = function (data) {
     it("Can translate data", function () {
       expect(data.entries).toBeDefined();

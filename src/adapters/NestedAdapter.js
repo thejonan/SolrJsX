@@ -54,7 +54,7 @@ NestedAdapter.prototype = {
 				'start': response.response.start,
 				'count': response.response.docs.length,
 				'total': response.response.numFound,
-				'pageSize': parseInt(response.responseHeader.params.rows)
+				'pageSize': parseInt(response.responseHeader.params && response.responseHeader.params.rows || 0)
 			}
 		};
 	}
