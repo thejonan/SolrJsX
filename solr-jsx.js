@@ -86,10 +86,6 @@
         stringifyParameter(param) {
             var prefix = Solr.stringifyDomain(param);
             return param.value || prefix ? param.name + "=" + encodeURIComponent(prefix + Solr.stringifyValue(param)) : null;
-        },
-        buildUrl(serverUrl, servlet, paramArr) {
-            var urlPrefix = (serverUrl || "") + (servlet || ""), urlParams = paramArr.join("&");
-            return urlPrefix + (urlPrefix.indexOf("?") > 0 ? "&" : "?") + urlParams;
         }
     };
     var paramIsMultiple = function(name) {
@@ -220,7 +216,7 @@
     function QueryingURL(settings) {
         a$$1.setup(this, defSettings$1, settings);
     }
-    QueryingURL.prototype.__expects = [ "enumerateParameters" ];
+    QueryingURL.prototype.__expects = [ "enumerateParameters", "buildUrl" ];
     QueryingURL.prototype.prepareQuery = function(servlet) {
         var query = [];
         this.enumerateParameters((function(param) {
@@ -228,7 +224,7 @@
             if (p != null) query.push(p);
         }));
         return {
-            url: Solr$1.buildUrl(this.serverUrl, servlet || this.servlet, query)
+            url: this.buildUrl(servlet || this.servlet, query)
         };
     };
     QueryingURL.prototype.parseResponse = function(response) {
@@ -249,7 +245,7 @@
     function QueryingJson(settings) {
         a$$1.setup(this, defSettings$2, settings);
     }
-    QueryingJson.prototype.__expects = [ "enumerateParameters" ];
+    QueryingJson.prototype.__expects = [ "enumerateParameters", "buildUrl" ];
     QueryingJson.prototype.prepareQuery = function() {
         var query = [], json = {
             params: {}
@@ -272,10 +268,10 @@
         if (!this.useBody) {
             query.push(encodeURIComponent(json));
             return {
-                url: Solr$1.buildUrl(this.serverUrl, this.servlet, query)
+                url: this.buildUrl(this.servlet, query)
             };
         } else return {
-            url: Solr$1.buildUrl(this.serverUrl, this.servlet, query),
+            url: this.buildUrl(this.servlet, query),
             data: json,
             contentType: "application/json",
             type: "POST",
@@ -350,6 +346,7 @@
         };
     };
     var defSettings$5 = {
+        servlet: null,
         resetPage: true,
         privateRequest: false,
         customResponse: null
@@ -358,13 +355,14 @@
         a$$1.setup(this, defSettings$5, settings);
         this.manager = null;
     }
+    Eventing.prototype.__expects = [ "addValue", "removeValue" ];
     Eventing.prototype.init = function(manager) {
         a$$1.pass(this, Eventing, "init", manager);
         this.manager = manager;
     };
     Eventing.prototype.doRequest = function() {
         if (this.resetPage) this.manager.addParameter("start", 0);
-        this.manager.doRequest(null, self.privateRequest, self.customResponse);
+        this.manager.doRequest(this.servlet, self.privateRequest, self.customResponse);
     };
     Eventing.prototype.updateHandler = function() {
         var self = this, args = arguments;

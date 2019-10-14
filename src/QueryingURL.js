@@ -18,7 +18,7 @@ function QueryingURL(settings) {
 	a$.setup(this, defSettings, settings);
 };
 
-QueryingURL.prototype.__expects = ["enumerateParameters"];
+QueryingURL.prototype.__expects = ["enumerateParameters", "buildUrl"];
 
 QueryingURL.prototype.prepareQuery = function (servlet) {
 	var query = [];
@@ -30,7 +30,7 @@ QueryingURL.prototype.prepareQuery = function (servlet) {
 	});
 
 	return {
-		url: Solr.buildUrl(this.serverUrl, (servlet || this.servlet), query)
+		url: this.buildUrl((servlet || this.servlet), query)
 	};
 };
 

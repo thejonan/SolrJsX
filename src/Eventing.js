@@ -8,8 +8,9 @@
 import a$ from 'as-sys';
 
 var defSettings = {
+	servlet: null, // A custom servlet for this event. Optional.
 	resetPage: true, // Whether to reset to the first page on each requst.
-	privateRequest: false, // Whether the request made should be private, i.e. ignoreing registered listeners.
+	privateRequest: false, // Whether the request made should be private, i.e. ignoring registered listeners.
 	customResponse: null, // A custom response function, which if present invokes private doRequest.
 };
 
@@ -17,6 +18,8 @@ function Eventing(settings) {
 	a$.setup(this, defSettings, settings);
 	this.manager = null;
 };
+
+Eventing.prototype.__expects = [ "addValue", "removeValue" ];
 
 /** Make the initial setup of the manager.
  */
@@ -31,7 +34,7 @@ Eventing.prototype.doRequest = function () {
 	if (this.resetPage)
 		this.manager.addParameter('start', 0);
 
-	this.manager.doRequest(null, self.privateRequest, self.customResponse);
+	this.manager.doRequest(this.servlet, self.privateRequest, self.customResponse);
 };
 
 /**

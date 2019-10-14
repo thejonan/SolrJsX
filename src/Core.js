@@ -162,12 +162,5 @@ export default {
         // For dismax request handlers, if the q parameter has local params, the
         // q parameter must be set to a non-empty value.
         return param.value || prefix ? param.name + "=" + encodeURIComponent(prefix + Solr.stringifyValue(param)) : null;
-    },
-
-    buildUrl(serverUrl, servlet, paramArr) {
-        var urlPrefix = (serverUrl || '') + (servlet || ''),
-            urlParams = paramArr.join("&");
-
-        return urlPrefix + (urlPrefix.indexOf('?') > 0 ? "&" : "?") + urlParams;
-    },
+    }
 };
