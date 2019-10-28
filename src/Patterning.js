@@ -9,7 +9,7 @@ Solr.Patterning = function (settings) {
   this.valuePattern = settings && settings.valuePattern || this.valuePattern;
   var oldRE = this.fqRegExp.toString().replace(/^\/\^?|\$?\/$/g,""),
       newRE = "^" + 
-        a$.escapeRegExp(this.valuePattern.replace(/\{\{!?-\}\}/g, "-?").replace("{{v}}", "__v__"))
+        this.escapeRegExp(this.valuePattern.replace(/\{\{!?-\}\}/g, "-?").replace("{{v}}", "__v__"))
           .replace("__v__", oldRE)
           .replace("--?", "-?")
           .replace("--", "");
@@ -20,7 +20,11 @@ Solr.Patterning = function (settings) {
 Solr.Patterning.prototype = {
   valuePattern: "{{-}}{{v}}",   // The default pattern.
   
-  fqValue: function (value, exclude) {
+  escapeRegExp(str) {
+	  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+  },
+  fqValue(value,
+     exclude) {
     return this.valuePattern
       .replace("{{-}}", exclude ? "-" : "")   // place the exclusion...
       .replace("{{!-}}", exclude ? "" : "-")  // ... or negative exclusion.
