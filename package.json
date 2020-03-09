@@ -1,5 +1,5 @@
 {
-  "name": "solr-jsx",
+  "name": "@ideaconsult/solr-jsx",
   "version": "0.15.10",
   "description": "A lightweight, JavaScript engine for building Solr requests",
   "keywords": [
@@ -42,7 +42,7 @@
     "main": "solr-jsx.js"
   },
   "dependencies": {
-    "@thejonan/as-sys": "^0.13.3"
+    "@thejonan/as-sys": "0.13.3"
   },
   "devDependencies": {
     "grunt": "^1.0.4",
