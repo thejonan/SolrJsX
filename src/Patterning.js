@@ -20,10 +20,10 @@ Solr.Patterning = function (settings) {
 Solr.Patterning.prototype = {
   valuePattern: "{{-}}{{v}}",   // The default pattern.
   
-  escapeRegExp(str) {
+  escapeRegExp: function(str) {
 	  return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
   },
-  fqValue(value,
+  fqValue: function(value,
      exclude) {
     return this.valuePattern
       .replace("{{-}}", exclude ? "-" : "")   // place the exclusion...
