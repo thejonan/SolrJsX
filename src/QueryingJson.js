@@ -8,7 +8,7 @@
   
 
 var paramIsUrlOnly = function(name) {
-  return name.match(/^(json\.nl|json\.wrf|q|wt|start)/);
+  return name.match(/^(json\.nl|json\.wrf|q|wt|start|json2.+)/);
 };
 
 var paramJsonName = function (name) {
