@@ -14,7 +14,7 @@ var defaultParameters = {
   'echoParams': "none"
 };
   
-Solr.FacetSearching = function (settings) {
+Solr.FacetListing = function (settings) {
   a$.extend(true, this, a$.common(settings, this));
   this.id = settings.id;
   
@@ -24,7 +24,7 @@ Solr.FacetSearching = function (settings) {
     this.parameters['json.nl'] = "map";    
 };
 
-Solr.FacetSearching.prototype = {
+Solr.FacetListing.prototype = {
   __expects: [ "addValue", "doSpying", "resetValue", "onFound" ],
 
   servlet: "select",          // what phrase to use on the internal queries
@@ -34,7 +34,7 @@ Solr.FacetSearching.prototype = {
   activeFacets: null,         // a map of active / inactive facets. Default is ON.
   
   init: function (manager) {
-    a$.pass(this, Solr.FacetSearching, "init", manager);
+    a$.pass(this, Solr.FacetListing, "init", manager);
     this.manager = manager;
     
     // make the initial values stuff
