@@ -179,6 +179,31 @@ Solr.Configuring.prototype = {
 
     return val;
   },
+
+  /**
+   * Exports the parameters with given names in the format that {@see mergeParameters} can use directly.
+   * @param {Array<String>} names The list of parameter names to be exported.
+   * @param {Function} cb An optional callback for custom formatting of each parameter.
+   */
+  exportParameters: function (names, cb) {
+    var state = {},
+      store = this.parameterStore;
+
+    a$.each(names, function (one) {
+      if (!store[one])
+        ;
+      else if (typeof cb === 'function')
+        state[one] = cb(one, store[one]);
+      else
+        state[one] = store[one];
+    })
+
+    return state;
+  },
+
+  importParameters: function (state) {
+    this.parameterStore = a$.extend(this.parameterStore, state);
+  },
   
   /** Merge the parameters from the given map into the current ones
     */
@@ -187,7 +212,7 @@ Solr.Configuring.prototype = {
     a$.each(parameters, function (p, name) {
       if (typeof p === 'string')
         self.addParameter(Solr.parseParameter(name + '=' + p));
-      else
+      else 
         self.addParameter(name, p);
     });
   },
