@@ -181,7 +181,7 @@ Solr.Configuring.prototype = {
   },
 
   /**
-   * Exports the parameters with given names in the format that {@see mergeParameters} can use directly.
+   * Exports the parameters with given names in the format that {@see importParameters} can use directly.
    * @param {Array<String>} names The list of parameter names to be exported.
    * @param {Function} cb An optional callback for custom formatting of each parameter.
    */
@@ -201,6 +201,10 @@ Solr.Configuring.prototype = {
     return state;
   },
 
+  /**
+   * Import the state of parameters, as exported via {@see exportParameters}.
+   * @param {Object} state The parameter state to be merged into the parameters' store.
+   */
   importParameters: function (state) {
     this.parameterStore = a$.extend(this.parameterStore, state);
   },

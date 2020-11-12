@@ -101,6 +101,10 @@ Solr.UrlPersistency.prototype = {
     return par && JSON.parse(par);
   },
 
+  /**
+   * Pushes the provided persistency state into the browser history store.
+   * @param {Object} state The persistancy state object
+   */
   pushToHistory: function (state) {
     return window.history.pushState(
       state, 
@@ -108,6 +112,9 @@ Solr.UrlPersistency.prototype = {
       this.addUrlParam(window.location.href, this.urlParam, state));
   },
 
+  /**
+   * This Solr manage handler, executed after the request, to store the actual parameters.
+   */
   afterRequest: function () {
     this.pushToHistory(this.manager.exportParameters(this.storedParams));
   }
