@@ -18,7 +18,7 @@ import "Configuring";
 import "Compatibility";
 import "QueryingURL";
 import "QueryingJson";
-import "Persistency";
+import "UrlPersistency";
 import "Paging";
 import "Requesting";
 import "Spying";

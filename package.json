@@ -1,6 +1,6 @@
 {
   "name": "@ideaconsult/solr-jsx",
-  "version": "0.15.11",
+  "version": "0.16.0",
   "description": "A lightweight, JavaScript engine for building Solr requests",
   "keywords": [
     "solr",
@@ -45,11 +45,11 @@
     "@thejonan/as-sys": "0.13.3"
   },
   "devDependencies": {
-    "grunt": "^1.1.0",
-    "jasmine-core": "latest",
+    "grunt": "^1.3.0",
+    "jasmine-core": "^3.6.0",
     "jasmine-node": "^3.0.0",
     "smash": "latest",
-    "uglify-js": "^3.9.3"
+    "uglify-js": "^3.11.5"
   },
   "scripts": {
     "pretest": "rm -f solr-jsx.* && export VERSION=`node -e 'console.log(require(\"./package.json\").version)'` && sed -E -e \"s/\\{\\{VERSION\\}\\}/$VERSION/\" src/Core.js > src/start.js && smash src/start.js > solr-jsx.js && rm -rf src/start.js && rsync node_modules/jasmine-core/lib/jasmine-core/*.js test/libs && rsync node_modules/jasmine-core/lib/jasmine-core/*.css test/libs && rsync node_modules/underscore/*.js test/libs && rsync node_modules/@thejonan/as-sys/as-sys*.js test/libs",
