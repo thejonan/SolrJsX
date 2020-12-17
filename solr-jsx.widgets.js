@@ -175,7 +175,7 @@ Solr.Widgets.Pager.prototype = {
       links.push(this.pageLinkOrSpan(this.nextPage(), [ 'pager-disabled', 'pager-next' ], this.nextLabel));
 
       var $target = $(this.target);
-      $target.empty();
+      $target.empty().hide(); // Speeding up with this hiding!
 
       for (var i = 0, l = links.length; i < l; i++) {
         var $li = $('<li></li>');
@@ -184,6 +184,8 @@ Solr.Widgets.Pager.prototype = {
         }
         $target.append($li.append(links[i]));
       }
+
+      $target.show();
     }
   },
 
