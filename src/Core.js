@@ -29,6 +29,7 @@ import "Faceting";
 import "Ranging";
 import "Pivoting";
 import "Listing";
+import "FacetListing";
 
   /** ... and finish with some module / export definition for according platforms
     */
