@@ -45,7 +45,7 @@ Solr.FacetListing.prototype = {
     }
   },
 
-  onSelect: function (item) {
+  onChange: function (item) {
     var added = (typeof item === 'string') ? this.addValue(item) : this.manager.getListener(item.id).addValue(item.value);
     
     if (added)
